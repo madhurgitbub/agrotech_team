@@ -1,3 +1,39 @@
+import os
+
+from pathlib import Path
+from dotenv import load_dotenv
+from mistralai.client import Mistral
+from pydantic import BaseModel
+
+# Base directories
+BASE_DIR = Path(__file__).resolve().parent
+ROOT_DIR = BASE_DIR.parent
+
+# Load .env file
+load_dotenv(BASE_DIR / ".env")
+
+# Mistral API key
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "").strip()
+
+print("Mistral API Key loaded:", bool(MISTRAL_API_KEY))
+
+if not MISTRAL_API_KEY:
+    raise RuntimeError(
+        "MISTRAL_API_KEY is missing. Check your backend/.env file."
+    )
+
+# Create Mistral client
+client = Mistral(
+    api_key=MISTRAL_API_KEY
+)
+
+
+# ADD THIS HERE
+class ChatRequest(BaseModel):
+    message: str
+    language: str = "English"
+
+
 from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict, Any
 import os
@@ -13,6 +49,7 @@ from email.message import EmailMessage
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Depends, Header, status, Query
 from fastapi.middleware.cors import CORSMiddleware
+from weather import router as weather_router
 from pydantic import BaseModel, EmailStr, Field
 
 # Base directories
@@ -309,20 +346,26 @@ class SQLiteDB:
 local_db = SQLiteDB(SQLITE_DB_PATH)
 
 # FastAPI Application
-app = FastAPI(
-    title='AgroTech API',
-    version='3.0.0',
-    description='AgroTech Multi-Role Farming Platform (Farmer, Provider, Admin)'
-)
+app = FastAPI()
+
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_origin_regex=r".*",
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+        "http://127.0.0.1:8000",
+        "http://localhost:8000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(weather_router)
 
 # Pydantic Schemas
 class RegisterIn(BaseModel):
@@ -1347,3 +1390,73 @@ def create_complaint(payload: ComplaintIn, user=Depends(current_user)):
 @app.get('/api/notifications')
 def legacy_get_notifications(user=Depends(current_user)):
     return get_alerts(user)
+
+@app.post("/api/chatbot")
+async def chatbot(request: ChatRequest):
+
+    try:
+
+        system_prompt = f"""
+You are AgroTECH AI, an intelligent agricultural assistant designed for Indian farmers.
+
+Your role is to help farmers with:
+
+- Crop recommendations
+- Fertilizer guidance
+- Irrigation advice
+- Pest and disease awareness
+- Weather-related farming advice
+- Soil improvement
+- Agricultural equipment
+- Government agriculture schemes
+- General farming questions
+
+Important rules:
+
+1. Give practical and easy-to-understand answers.
+2. Focus on Indian agriculture.
+3. If the farmer asks in Hindi, respond in Hindi.
+4. If the preferred language is Hindi, answer completely in Hindi.
+5. If the preferred language is English, answer in simple English.
+6. Keep answers concise and farmer-friendly.
+7. Use bullet points when useful.
+8. Mention when professional agricultural advice is needed.
+
+User preferred language: {request.language}
+"""
+
+        chat_response = client.chat.complete(
+
+            model="mistral-small-latest",
+
+            messages=[
+
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+
+                {
+                    "role": "user",
+                    "content": request.message
+                }
+
+            ]
+
+        )
+
+        reply = chat_response.choices[0].message.content
+
+        return {
+            "success": True,
+            "reply": reply
+        }
+
+    except Exception as e:
+
+        print("Mistral Chatbot Error:", e)
+
+        return {
+            "success": False,
+            "message": "AI service error"
+        }
