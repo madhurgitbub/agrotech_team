@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Admin Panel – AgroTECH</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    body { background: #f1f5f2; }
+    .admin-layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+    .sidebar { background: #072710; color: white; padding: 20px 14px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    .brand { font-size: 22px; font-weight: 800; padding: 8px 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 12px; }
+    .brand span { color: #69f0ae; }
+    .nav-section-label { font-size: 11px; font-weight: 700; color: #81c784; text-transform: uppercase; letter-spacing: 0.6px; padding: 12px 14px 4px; }
+    .side-btn { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; background: transparent; border: 0; color: #d9eadc; padding: 10px 14px; border-radius: 10px; margin: 3px 0; cursor: pointer; font-size: 13.5px; transition: all 0.2s; }
+    .side-btn:hover, .side-btn.active { background: #1b5e20; color: white; font-weight: 600; }
+    .logout { margin-top: 18px; background: #7f1d1d; color: white; }
+    .logout:hover { background: #991b1b; }
+    .main { padding: 25px 32px; max-width: 1400px; }
+    .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .top h1 { margin: 0; font-size: 1.6rem; color: #0b3d14; }
+    .admin-user { background: white; padding: 8px 16px; border-radius: 12px; border: 1px solid #e3e8e4; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+    
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    @media(max-width:1100px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+    @media(max-width:700px) { .grid-4, .grid-2 { grid-template-columns: 1fr; } }
+
+    .stat { background: white; border: 1px solid #e2e8e3; border-radius: 16px; padding: 18px; box-shadow: var(--shadow-sm); }
+    .stat small { color: #64748b; font-size: 0.8rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.4px; }
+    .stat strong { display: block; font-size: 28px; margin-top: 6px; color: #145a1c; font-family: 'Sora', sans-serif; }
+    
+    .panel { background: white; border: 1px solid #e2e8e3; border-radius: 16px; padding: 22px; margin-bottom: 20px; box-shadow: var(--shadow-sm); }
+    .panel-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+    .panel h2 { margin: 0; font-size: 1.25rem; color: #0f3d17; }
+    
+    .table-wrap { overflow-x: auto; }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th { background: #f8faf9; font-weight: 700; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px; border-bottom: 2px solid #e2e8e0; text-align: left; }
+    .table td { padding: 12px; border-bottom: 1px solid #edf0ee; font-size: 14px; color: #334155; }
+    .table tr:hover { background: #f9fbf9; }
+    
+    .pill { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; display: inline-block; }
+    .pill-active { background: #e8f5e9; color: #1b5e20; }
+    .pill-blocked { background: #fee2e2; color: #b91c1c; }
+    .pill-pending { background: #fff8e1; color: #b45309; }
+    
+    .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .mini { border: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+    .approve { background: #e8f5e9; color: #1b5e20; }
+    .approve:hover { background: #c8e6c9; }
+    .reject { background: #fee2e2; color: #b91c1c; }
+    .reject:hover { background: #fecaca; }
+    
+    .search-input { width: 100%; padding: 10px 14px; border: 1.5px solid #dfe6e1; border-radius: 10px; font-size: 14px; margin-bottom: 14px; }
+    .sub-filter-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .sub-tab { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid #cbd5e1; background: white; color: #475569; }
+    .sub-tab.active { background: #1b5e20; color: white; border-color: #1b5e20; }
+
+    @media(max-width:950px) {
+      .admin-layout { grid-template-columns: 1fr; }
+      .sidebar { height: auto; position: relative; }
+      .main { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">🌱 Agro<span>TECH</span> Admin</div>
+    
+    <button class="side-btn active" onclick="showSection('dashboard', this)">📊 <span data-i18n="nav.admin_dashboard">Dashboard</span></button>
+
+    <div class="nav-section-label" data-i18n="nav.admin_farmers">FARMER MANAGEMENT</div>
+    <button class="side-btn" onclick="showSection('farmers', this)">🌾 <span data-i18n="nav.admin_farmers">All Farmers</span></button>
+
+    <div class="nav-section-label" data-i18n="nav.admin_providers">PROVIDER MANAGEMENT</div>
+    <button class="side-btn" onclick="showSection('providers', this)">🚜 <span data-i18n="nav.admin_providers">All Providers</span></button>
+
+    <div class="nav-section-label" data-i18n="admin.portal_title">PLATFORM OPERATIONS</div>
+    <button class="side-btn" onclick="showSection('services', this)">📋 <span data-i18n="nav.admin_services">Services & Listings</span></button>
+    <button class="side-btn" onclick="showSection('requests', this)">📦 <span data-i18n="nav.admin_requests">Service Requests</span></button>
+    <button class="side-btn" onclick="showSection('alerts', this)">🔔 <span data-i18n="nav.admin_alerts">Broadcast & Alerts</span></button>
+    <button class="side-btn" onclick="showSection('reports', this)">📈 <span data-i18n="nav.admin_reports">Reports & Analytics</span></button>
+    <button class="side-btn" onclick="showSection('complaints', this)">⚠️ <span data-i18n="nav.admin_complaints">Complaints & Support</span></button>
+    <button class="side-btn" onclick="showSection('settings', this)">⚙️ <span data-i18n="nav.admin_settings">Settings & Security</span></button>
+    
+    <button class="side-btn logout" onclick="adminLogout()">🚪 <span data-i18n="nav.logout">Logout</span></button>
+  </aside>
+
+  <!-- Main View -->
+  <main class="main">
+    <div class="top">
+      <div>
+        <h1 id="title" data-i18n="admin.portal_title">Admin Dashboard</h1>
+        <p style="color:#64748b;margin:4px 0" data-i18n="admin.portal_subtitle">Complete overview of Farmers, Providers, Services, and Bookings</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="langToggleHolder"></div>
+        <div class="admin-user">🛡️ <span id="adminName">Administrator</span></div>
+      </div>
+    </div>
+    <div id="content"></div>
+  </main>
+</div>
+
+<div id="global-toast" class="toast"></div>
+<script src="../js/i18n.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/global.js"></script>
+<script>
+let currentSection = 'dashboard';
+let cache = {};
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const holder = document.getElementById('langToggleHolder');
+  if (holder && typeof AgroI18n !== 'undefined') {
+    holder.innerHTML = AgroI18n.renderLanguageToggle();
+  }
+
+  if (!localStorage.getItem('agro_token')) {
+    location.href = 'admin-login.html';
+    return;
+  }
+  try {
+    const m = await apiRequest('/auth/me');
+    if (m.user.role !== 'admin') {
+      showToast('Admin privileges required', 'error');
+      setTimeout(() => location.href = 'admin-login.html', 800);
+      return;
+    }
+    document.getElementById('adminName').textContent = m.user.name || 'Administrator';
+    await showSection('dashboard', document.querySelector('.side-btn.active'));
+  } catch (e) {
+    clearSession();
+    location.href = 'admin-login.html';
+  }
+});
+
+async function showSection(sec, btn) {
+  currentSection = sec;
+  document.querySelectorAll('.side-btn').forEach(x => x.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const titles = {
+    dashboard: AgroI18n.get('admin.portal_title', 'Admin Dashboard'),
+    farmers: AgroI18n.get('nav.admin_farmers', 'Farmer Management'),
+    providers: AgroI18n.get('nav.admin_providers', 'Provider Management'),
+    services: AgroI18n.get('nav.admin_services', 'Services & Listings'),
+    requests: AgroI18n.get('nav.admin_requests', 'Service Requests & Orders'),
+    alerts: AgroI18n.get('nav.admin_alerts', 'Broadcast Announcements'),
+    reports: AgroI18n.get('nav.admin_reports', 'Reports & Analytics'),
+    complaints: AgroI18n.get('nav.admin_complaints', 'Complaints & Support'),
+    settings: AgroI18n.get('nav.admin_settings', 'Admin Settings')
+  };
+  document.getElementById('title').textContent = titles[sec] || 'Admin Control';
+
+  const c = document.getElementById('content');
+  c.innerHTML = '<div class="panel">Loading section data...</div>';
+
+  try {
+    if (sec === 'dashboard') c.innerHTML = await dashboardView();
+    if (sec === 'farmers') c.innerHTML = await farmersView();
+    if (sec === 'providers') c.innerHTML = await providersView();
+    if (sec === 'services') c.innerHTML = await servicesView();
+    if (sec === 'requests') c.innerHTML = await requestsView();
+    if (sec === 'alerts') c.innerHTML = alertsView();
+    if (sec === 'reports') c.innerHTML = await reportsView();
+    if (sec === 'complaints') c.innerHTML = await complaintsView();
+    if (sec === 'settings') c.innerHTML = settingsView();
+  } catch (e) {
+    c.innerHTML = `<div class="panel"><h2 style="color:#b91c1c">Error Loading Data</h2><p>${e.message}</p></div>`;
+  }
+}
+
+// 1. Dashboard
+async function dashboardView() {
+  const d = await apiRequest('/admin/dashboard');
+  return `
+    <div class="grid-4">
+      <div class="stat">
+        <small data-i18n="admin.stat_total_farmers">Total Farmers</small>
+        <strong>${d.total_farmers || d.users || 0}</strong>
+        <span style="font-size:12px;color:#16a34a">Active: ${d.active_farmers || d.total_farmers || 0}</span>
+      </div>
+      <div class="stat">
+        <small data-i18n="admin.stat_total_providers">Total Providers</small>
+        <strong>${d.total_providers || 0}</strong>
+        <span style="font-size:12px;color:#0284c7">Active: ${d.active_providers || d.total_providers || 0}</span>
+      </div>
+      <div class="stat">
+        <small data-i18n="admin.stat_total_services">Total Services</small>
+        <strong>${d.total_services || d.services || 0}</strong>
+        <span style="font-size:12px;color:#16a34a">Active: ${d.active_services || d.total_services || 0}</span>
+      </div>
+      <div class="stat">
+        <small data-i18n="admin.stat_revenue">Transaction Volume</small>
+        <strong>₹${Number(d.total_volume || d.revenue || 0).toLocaleString('en-IN')}</strong>
+        <span style="font-size:12px;color:#b45309">Requests: ${d.total_requests || d.orders || 0}</span>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-top">
+          <h2>🌾 Farmers vs Providers</h2>
+          <span class="pill pill-active">Healthy Platform Balance</span>
+        </div>
+        <div style="background:#f8fafc;padding:16px;border-radius:12px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px">
+            <span>Farmers (${d.total_farmers || 0})</span>
+            <span>Providers (${d.total_providers || 0})</span>
+          </div>
+          <div style="height:12px;border-radius:6px;background:#0284c7;overflow:hidden;display:flex">
+            <div style="background:#16a34a;width:${((d.total_farmers || 1)/((d.total_farmers||1)+(d.total_providers||1)))*100}%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-top">
+          <h2>📦 Service Request Pipeline</h2>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:#fff8e1;padding:14px;border-radius:10px;text-align:center">
+            <div style="font-size:24px;font-weight:800;color:#b45309">${d.pending_requests || d.pending_orders || 0}</div>
+            <div style="font-size:12px;color:#92400e">Pending Requests</div>
+          </div>
+          <div style="background:#e8f5e9;padding:14px;border-radius:10px;text-align:center">
+            <div style="font-size:24px;font-weight:800;color:#15803d">${d.completed_requests || 0}</div>
+            <div style="font-size:12px;color:#166534">Completed Requests</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// 2. Farmers Section
+async function farmersView() {
+  const r = await apiRequest('/admin/farmers');
+  cache.farmers = r.farmers || [];
+  return `
+    <div class="panel">
+      <div class="panel-top">
+        <h2>🌾 ${AgroI18n.get('nav.admin_farmers', 'Registered Farmers')} (${cache.farmers.length})</h2>
+      </div>
+      <div class="sub-filter-tabs">
+        <button class="sub-tab active" onclick="filterFarmerTable('all', this)">${AgroI18n.get('admin.farmers_tab_all', 'All Farmers')}</button>
+        <button class="sub-tab" onclick="filterFarmerTable('active', this)">${AgroI18n.get('admin.farmers_tab_active', 'Active')}</button>
+        <button class="sub-tab" onclick="filterFarmerTable('blocked', this)">${AgroI18n.get('admin.farmers_tab_inactive', 'Blocked')}</button>
+      </div>
+      <input class="search-input" placeholder="Search farmers by name, email, phone, location..." oninput="filterTableByQuery(this, 'farmersTable')">
+      <div class="table-wrap">
+        <table class="table" id="farmersTable">
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Location</th>
+            <th>Requests</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+          ${cache.farmers.map(f => `
+            <tr data-status="${f.status}">
+              <td><b>${f.name}</b></td>
+              <td>${f.email}</td>
+              <td>${f.phone}</td>
+              <td>${f.location || '—'}</td>
+              <td><span class="pill pill-active">${f.requests_count || 0}</span></td>
+              <td><span class="pill pill-${f.status}">${f.status}</span></td>
+              <td class="actions">
+                ${f.status === 'active'
+                  ? `<button class="mini reject" onclick="changeUserStatus('${f.id}', 'blocked')">Block</button>`
+                  : `<button class="mini approve" onclick="changeUserStatus('${f.id}', 'active')">Activate</button>`
+                }
+              </td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function filterFarmerTable(status, btn) {
+  document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#farmersTable tr').forEach((r, idx) => {
+    if (idx === 0) return;
+    const rStatus = r.getAttribute('data-status');
+    r.style.display = (status === 'all' || rStatus === status) ? '' : 'none';
+  });
+}
+
+// 3. Providers Section
+async function providersView() {
+  const r = await apiRequest('/admin/providers');
+  cache.providers = r.providers || [];
+  return `
+    <div class="panel">
+      <div class="panel-top">
+        <h2>🚜 ${AgroI18n.get('nav.admin_providers', 'Service Providers')} (${cache.providers.length})</h2>
+      </div>
+      <div class="sub-filter-tabs">
+        <button class="sub-tab active" onclick="filterProviderTable('all', this)">${AgroI18n.get('admin.providers_tab_all', 'All Providers')}</button>
+        <button class="sub-tab" onclick="filterProviderTable('active', this)">${AgroI18n.get('admin.providers_tab_active', 'Active')}</button>
+        <button class="sub-tab" onclick="filterProviderTable('blocked', this)">${AgroI18n.get('admin.providers_tab_inactive', 'Blocked')}</button>
+      </div>
+      <input class="search-input" placeholder="Search providers by name, email, phone, location..." oninput="filterTableByQuery(this, 'providersTable')">
+      <div class="table-wrap">
+        <table class="table" id="providersTable">
+          <tr>
+            <th>Partner Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Base Location</th>
+            <th>Services Listed</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+          ${cache.providers.map(p => `
+            <tr data-status="${p.status}">
+              <td><b>${p.name}</b></td>
+              <td>${p.email}</td>
+              <td>${p.phone}</td>
+              <td>${p.location || '—'}</td>
+              <td><span class="pill pill-active">${p.services_count || 0} listings</span></td>
+              <td><span class="pill pill-${p.status}">${p.status}</span></td>
+              <td class="actions">
+                ${p.status === 'active'
+                  ? `<button class="mini reject" onclick="changeUserStatus('${p.id}', 'blocked')">Block</button>`
+                  : `<button class="mini approve" onclick="changeUserStatus('${p.id}', 'active')">Activate</button>`
+                }
+              </td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function filterProviderTable(status, btn) {
+  document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#providersTable tr').forEach((r, idx) => {
+    if (idx === 0) return;
+    const rStatus = r.getAttribute('data-status');
+    r.style.display = (status === 'all' || rStatus === status) ? '' : 'none';
+  });
+}
+
+// 4. Services Section
+async function servicesView() {
+  const r = await apiRequest('/admin/services');
+  cache.services = r.services || [];
+  return `
+    <div class="panel">
+      <div class="panel-top">
+        <h2>📋 ${AgroI18n.get('nav.admin_services', 'All Services & Equipment')} (${cache.services.length})</h2>
+      </div>
+      <input class="search-input" placeholder="Search services by name, category, provider, location..." oninput="filterTableByQuery(this, 'servicesTable')">
+      <div class="table-wrap">
+        <table class="table" id="servicesTable">
+          <tr>
+            <th>Service Name</th>
+            <th>Category</th>
+            <th>Provider</th>
+            <th>Rate</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+          ${cache.services.map(s => `
+            <tr>
+              <td><b>${s.name}</b></td>
+              <td><span class="pill pill-active">${getCategoryIcon(s.category)} ${s.category}</span></td>
+              <td>${s.provider?.name || s.users?.name || 'Verified Partner'}</td>
+              <td><b>${formatPrice(s.price)}</b> / ${s.unit}</td>
+              <td>📍 ${s.location || '—'}</td>
+              <td><span class="pill ${s.available ? 'pill-active' : 'pill-blocked'}">${s.available ? 'Available' : 'Paused'}</span></td>
+              <td class="actions">
+                <button class="mini approve" onclick="toggleAdminService(${s.id}, ${!s.available})">
+                  ${s.available ? 'Pause' : 'Activate'}
+                </button>
+                <button class="mini reject" onclick="deleteAdminService(${s.id})">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// 5. Requests Section
+async function requestsView() {
+  const r = await apiRequest('/admin/requests');
+  cache.requests = r.requests || [];
+  return `
+    <div class="panel">
+      <div class="panel-top">
+        <h2>📦 ${AgroI18n.get('nav.admin_requests', 'Service Requests & Orders')} (${cache.requests.length})</h2>
+      </div>
+      <input class="search-input" placeholder="Search requests by farmer, provider, service name, ID..." oninput="filterTableByQuery(this, 'requestsTable')">
+      <div class="table-wrap">
+        <table class="table" id="requestsTable">
+          <tr>
+            <th>ID</th>
+            <th>Farmer</th>
+            <th>Provider</th>
+            <th>Service</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+          ${cache.requests.map(q => `
+            <tr>
+              <td><b>#${q.request_id || q.order_id || q.id}</b></td>
+              <td>${q.farmer?.name || q.farmer_name || 'Farmer'}</td>
+              <td>${q.provider?.name || 'Provider'}</td>
+              <td>${q.service_name || q.product_name}</td>
+              <td><b>${formatPrice(q.price)}</b></td>
+              <td><span class="status-pill status-${q.status}">${q.status}</span></td>
+              <td>${formatDate(q.created_at)}</td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// 6. Alerts & Announcements
+function alertsView() {
+  return `
+    <div class="panel">
+      <h2>📣 ${AgroI18n.get('admin.send_broadcast_title', 'Broadcast Platform Announcement')}</h2>
+      <p style="color:#64748b;font-size:14px;margin-bottom:18px">Send notifications directly to Farmers, Providers, or All users.</p>
+      
+      <div class="form-group">
+        <label class="form-label" data-i18n="admin.broadcast_audience">Target Audience</label>
+        <select id="broadcastAudience" class="form-select">
+          <option value="all">All Platform Users</option>
+          <option value="farmer">🌾 Farmers Only</option>
+          <option value="provider">🚜 Service Providers Only</option>
+          <option value="admin">🛡️ Admins Only</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Announcement Title</label>
+        <input type="text" id="broadcastTitle" class="form-input" placeholder="e.g. Seasonal Subsidy Alert / Maintenance Notice">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="admin.broadcast_message">Message Content *</label>
+        <textarea id="broadcastMessage" class="form-textarea" rows="4" placeholder="Write announcement..."></textarea>
+      </div>
+
+      <button class="btn btn-primary" onclick="sendBroadcast()" id="bcastBtn">
+        ${AgroI18n.get('admin.broadcast_btn', '📣 Send Announcement')}
+      </button>
+    </div>
+  `;
+}
+
+async function sendBroadcast() {
+  const aud = document.getElementById('broadcastAudience').value;
+  const title = document.getElementById('broadcastTitle').value.trim() || 'Platform Announcement';
+  const msg = document.getElementById('broadcastMessage').value.trim();
+  const btn = document.getElementById('bcastBtn');
+
+  if (!msg) {
+    showToast(AgroI18n.get('common.fill_required', 'Please write a message.'), 'error');
+    return;
+  }
+  try {
+    btn.disabled = true;
+    await apiRequest('/admin/notifications', {
+      method: 'POST',
+      body: JSON.stringify({ audience: aud, title, message: msg })
+    });
+    btn.disabled = false;
+    showToast('Announcement broadcasted successfully! 📣', 'success');
+    document.getElementById('broadcastMessage').value = '';
+  } catch (err) {
+    btn.disabled = false;
+    showToast(err.message, 'error');
+  }
+}
+
+// 7. Reports & Analytics
+async function reportsView() {
+  const d = await apiRequest('/admin/dashboard');
+  return `
+    <div class="grid-4">
+      <div class="stat"><small>Farmers</small><strong>${d.total_farmers || d.users || 0}</strong></div>
+      <div class="stat"><small>Providers</small><strong>${d.total_providers || 0}</strong></div>
+      <div class="stat"><small>Services</small><strong>${d.total_services || d.services || 0}</strong></div>
+      <div class="stat"><small>Total Volume</small><strong>₹${Number(d.total_volume || d.revenue || 0).toLocaleString('en-IN')}</strong></div>
+    </div>
+    <div class="panel">
+      <h2>📈 Platform Performance Insights</h2>
+      <p style="color:#64748b;margin-bottom:16px">Live metrics processed through role-based architecture and verified endpoints.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+        <div style="padding:16px;background:#f0fdf4;border-radius:12px;border:1px solid #bbf7d0">
+          <b style="color:#166534">🔒 Role Protection</b>
+          <p style="font-size:13px;color:#15803d;margin-top:4px">Strict backend validation for Farmer, Provider, and Admin permissions.</p>
+        </div>
+        <div style="padding:16px;background:#f0f9ff;border-radius:12px;border:1px solid #bae6fd">
+          <b style="color:#0369a1">🌐 Bilingual Engine</b>
+          <p style="font-size:13px;color:#0284c7;margin-top:4px">Full English and Hindi (हिंदी) real-time translations.</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// 8. Complaints
+async function complaintsView() {
+  const r = await apiRequest('/admin/complaints');
+  const complaints = r.complaints || [];
+  return `
+    <div class="panel">
+      <h2>⚠️ Support Tickets & Complaints (${complaints.length})</h2>
+      <div class="table-wrap" style="margin-top:14px">
+        <table class="table">
+          <tr>
+            <th>Ticket</th>
+            <th>User</th>
+            <th>Issue</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+          ${complaints.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:#64748b">No complaints filed.</td></tr>' : ''}
+          ${complaints.map(c => `
+            <tr>
+              <td><b>#C-${c.id}</b></td>
+              <td>${c.users?.name || 'User'}</td>
+              <td>${c.subject}<br><small style="color:#64748b">${c.description}</small></td>
+              <td><span class="pill pill-pending">${c.priority}</span></td>
+              <td><span class="pill pill-${c.status === 'resolved' ? 'active' : 'pending'}">${c.status}</span></td>
+              <td>
+                ${c.status !== 'resolved' ? `<button class="mini approve" onclick="resolveComplaint(${c.id})">Resolve</button>` : 'Resolved'}
+              </td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+async function resolveComplaint(id) {
+  try {
+    await apiRequest(`/admin/complaints/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: 'resolved' }) });
+    showToast('Complaint marked as resolved ✅', 'success');
+    await showSection('complaints');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// 9. Settings
+function settingsView() {
+  return `
+    <div class="panel">
+      <h2>⚙️ System Architecture & Settings</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:14px">
+        <div style="padding:16px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0">
+          <b>🔐 Role-Based Access Control</b>
+          <p style="font-size:13px;color:#64748b;margin-top:4px">JWT Bearer verification with role-level FastAPI dependencies.</p>
+        </div>
+        <div style="padding:16px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0">
+          <b>🗄️ Database Dual Mode</b>
+          <p style="font-size:13px;color:#64748b;margin-top:4px">SQLite local database with optional Supabase PostgreSQL sync.</p>
+        </div>
+        <div style="padding:16px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0">
+          <b>🌐 i18n Localization</b>
+          <p style="font-size:13px;color:#64748b;margin-top:4px">English & Hindi support with instant reactive switching.</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Action Helpers
+async function changeUserStatus(id, status) {
+  try {
+    await apiRequest(`/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
+    showToast('User status updated successfully.', 'success');
+    await showSection(currentSection);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function toggleAdminService(id, available) {
+  try {
+    await apiRequest(`/admin/services/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: available ? 'active' : 'inactive' }) });
+    showToast('Service availability updated.', 'success');
+    await showSection('services');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function deleteAdminService(id) {
+  if (!confirm('Are you sure you want to remove this service?')) return;
+  try {
+    await apiRequest(`/admin/services/${id}`, { method: 'DELETE' });
+    showToast('Service deleted by admin.', 'success');
+    await showSection('services');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function filterTableByQuery(input, tableId) {
+  const q = input.value.toLowerCase().trim();
+  document.querySelectorAll(`#${tableId} tr`).forEach((row, idx) => {
+    if (idx === 0) return;
+    row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+function adminLogout() {
+  clearSession();
+  location.href = '../index.html';
+}
+</script>
+</body>
+</html>

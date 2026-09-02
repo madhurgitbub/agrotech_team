@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – AgroTECH</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a2e0d 0%, #1b5e20 50%, #2e7d32 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .auth-wrapper {
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .auth-brand {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .auth-brand .logo-big {
+      width: 64px;
+      height: 64px;
+      background: rgba(255,255,255,0.12);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 0.75rem;
+    }
+
+    .auth-brand h1 {
+      font-size: 1.8rem;
+      color: white;
+    }
+
+    .auth-brand h1 span { color: #69f0ae; }
+
+    .auth-brand p {
+      color: rgba(255,255,255,0.7);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    .auth-card {
+      background: rgba(255,255,255,0.98);
+      border-radius: var(--radius-xl);
+      padding: 2.25rem;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+      position: relative;
+    }
+
+    .card-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .input-with-icon {
+      position: relative;
+    }
+
+    .input-with-icon .icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      pointer-events: none;
+    }
+
+    .input-with-icon .form-input {
+      padding-left: 40px;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 1rem;
+      color: var(--gray-400);
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    .password-toggle:hover { color: var(--green-600); }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: var(--gray-600);
+    }
+
+    .auth-footer a {
+      color: var(--green-700);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .auth-footer a:hover { text-decoration: underline; }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--gray-400);
+      font-size: 0.8rem;
+      margin: 1.25rem 0;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--gray-200);
+    }
+
+    .error-msg {
+      background: #ffebee;
+      color: #c62828;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .error-msg.show { display: flex; }
+
+    .demo-box {
+      margin-top: 14px;
+      padding: 12px;
+      background: #f0fdf4;
+      border: 1.5px dashed #86efac;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      color: #166534;
+    }
+
+    .demo-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .demo-pill {
+      background: white;
+      border: 1px solid #86efac;
+      padding: 5px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .demo-pill:hover {
+      background: #dcfce7;
+      border-color: #22c55e;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-wrapper">
+    <div class="auth-brand">
+      <div class="logo-big">🌱</div>
+      <h1>Agro<span>TECH</span></h1>
+      <p data-i18n="app.tagline">Smart Agricultural Platform</p>
+    </div>
+
+    <div class="auth-card">
+      <div class="card-top-bar">
+        <div>
+          <h2 style="font-size:1.35rem;color:var(--green-900);margin:0" data-i18n="auth.login_title">Login to AgroTECH</h2>
+          <p style="color:var(--gray-500);font-size:0.82rem;margin-top:2px" data-i18n="auth.login_subtitle">Sign in to access your dashboard</p>
+        </div>
+        <div id="langToggleHolder"></div>
+      </div>
+
+      <div class="error-msg" id="loginError">
+        <span>⚠️</span>
+        <span id="errorText">Invalid credentials.</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="auth.username_label">Email / Username / Phone</label>
+        <div class="input-with-icon">
+          <span class="icon">👤</span>
+          <input type="text" id="username" class="form-input" placeholder="farmer@agrotech.com or 8127059423" data-i18n-placeholder="auth.username_label" autocomplete="username">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="auth.password_label">Password</label>
+        <div class="input-with-icon">
+          <span class="icon">🔒</span>
+          <input type="password" id="password" class="form-input" placeholder="••••••••" autocomplete="current-password">
+          <button class="password-toggle" type="button" onclick="togglePassword()" id="pwToggle">👁️</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full btn-lg" onclick="handleLogin()" style="margin-top:4px" id="loginBtn">
+        <span data-i18n="auth.login_btn">Login →</span>
+      </button>
+
+      <!-- Quick Demo Access for 3 Roles -->
+      <div class="demo-box">
+        <strong>💡 Quick Test Accounts (Click to autofill):</strong>
+        <div class="demo-pills">
+          <button type="button" class="demo-pill" onclick="fillDemo('farmer@agrotech.com','farmer123')">
+            🌾 Farmer Demo
+          </button>
+          <button type="button" class="demo-pill" onclick="fillDemo('provider@agrotech.com','provider123')">
+            🚜 Provider Demo
+          </button>
+          <button type="button" class="demo-pill" onclick="fillDemo('admin@agrotech.com','admin123')">
+            🛡️ Admin Demo
+          </button>
+        </div>
+      </div>
+
+      <div class="divider" data-i18n="auth.have_account">or</div>
+
+      <div class="auth-footer">
+        <span data-i18n="auth.no_account">Don't have an account?</span> 
+        <a href="register.html" data-i18n="auth.register_now">Register here</a>
+      </div>
+      <div class="auth-footer" style="margin-top:8px">
+        <a href="admin-login.html" data-i18n="auth.admin_portal_link">🛡️ Admin Login</a> · <a href="../index.html" data-i18n="common.back">Home</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="global-toast" class="toast"></div>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/global.js"></script>
+  <script>
+    // Language toggle in card header
+    document.addEventListener('DOMContentLoaded', () => {
+      const holder = document.getElementById('langToggleHolder');
+      if (holder && typeof AgroI18n !== 'undefined') {
+        holder.innerHTML = AgroI18n.renderLanguageToggle();
+      }
+
+      // Pre-fill role demo if parameter passed
+      const urlParams = new URLSearchParams(window.location.search);
+      const roleParam = urlParams.get('role');
+      if (roleParam === 'provider') {
+        fillDemo('provider@agrotech.com', 'provider123');
+      } else if (roleParam === 'farmer') {
+        fillDemo('farmer@agrotech.com', 'farmer123');
+      }
+    });
+
+    function fillDemo(u, p) {
+      document.getElementById('username').value = u;
+      document.getElementById('password').value = p;
+      showToast('Demo credentials filled! Click Login →', 'info');
+    }
+
+    async function handleLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const err = document.getElementById('loginError');
+      const btn = document.getElementById('loginBtn');
+
+      if (!username || !password) {
+        document.getElementById('errorText').textContent = AgroI18n.get('common.fill_required', 'Please fill in all fields.');
+        err.classList.add('show');
+        return;
+      }
+      if (password.length < 6) {
+        document.getElementById('errorText').textContent = 'Password must be at least 6 characters.';
+        err.classList.add('show');
+        return;
+      }
+
+      try {
+        btn.disabled = true;
+        btn.textContent = AgroI18n.get('common.loading', 'Logging in...');
+        const res = await apiLogin(username, password);
+        err.classList.remove('show');
+        showToast('Login successful! Welcome back 🌱', 'success');
+
+        const role = (res.user?.role || 'farmer').toLowerCase();
+        setTimeout(() => {
+          if (role === 'admin') {
+            window.location.href = 'admin-panel.html';
+          } else if (role === 'provider' || role === 'seller') {
+            window.location.href = 'provider-dashboard.html';
+          } else {
+            window.location.href = 'home.html';
+          }
+        }, 600);
+      } catch (e) {
+        btn.disabled = false;
+        btn.innerHTML = `<span data-i18n="auth.login_btn">${AgroI18n.get('auth.login_btn', 'Login →')}</span>`;
+        document.getElementById('errorText').textContent = e.message;
+        err.classList.add('show');
+      }
+    }
+
+    function togglePassword() {
+      const pw = document.getElementById('password');
+      const btn = document.getElementById('pwToggle');
+      if (pw.type === 'password') { pw.type = 'text'; btn.textContent = '🙈'; }
+      else { pw.type = 'password'; btn.textContent = '👁️'; }
+    }
+
+    // Enter key support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+  </script>
+</body>
+</html>

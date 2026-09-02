@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgroTECH – Smart Agricultural Machinery & Farm Services Platform</title>
+  <meta name="description" content="AgroTECH connects farmers with agricultural machinery owners and rural service providers for tractors, harvesters, drone spraying, irrigation, and mandi transport with transparent per-acre pricing.">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+
+  <!-- ==================== Header / Navigation ==================== -->
+  <header>
+    <nav class="hero-nav" id="mainNav">
+      <!-- 1. AgroTECH Logo (Large, Clean & Professional) -->
+      <a href="#" class="navbar-logo" aria-label="AgroTECH Home">
+        <div class="logo-icon">🌱</div>
+        Agro<span>TECH</span>
+      </a>
+
+      <button class="mobile-toggle" id="mobileMenuBtn" aria-label="Toggle Navigation">☰</button>
+
+      <!-- Exact 5 Nav Items + Language Selector Requested -->
+      <ul class="hero-nav-links" id="navLinks">
+        <!-- 2. About Dropdown -->
+        <li class="nav-dropdown-wrap" id="aboutDropdownWrap">
+          <button class="nav-dropdown-btn" id="aboutDropdownBtn" aria-expanded="false" aria-haspopup="true">
+            <span>📖</span> <span data-i18n="nav.about">About</span> <span class="dropdown-chevron">▾</span>
+          </button>
+          <div class="nav-dropdown-menu" id="aboutDropdownMenu">
+            <a href="#calendar" class="dropdown-item">
+              <span class="dropdown-item-icon">📅</span>
+              <div>
+                <strong data-i18n="nav.crop_calendar">Crop Calendar</strong>
+                <small>Kharif, Rabi & Zaid timelines</small>
+              </div>
+            </a>
+            <a href="#how-it-works" class="dropdown-item">
+              <span class="dropdown-item-icon">⚡</span>
+              <div>
+                <strong data-i18n="landing.how_title">How AgroTECH Works</strong>
+                <small>5-step mechanized booking flow</small>
+              </div>
+            </a>
+            <a href="#calculator" class="dropdown-item">
+              <span class="dropdown-item-icon">🧮</span>
+              <div>
+                <strong data-i18n="landing.calc_title">Cost Estimator</strong>
+                <small>Instant acreage & labor savings</small>
+              </div>
+            </a>
+            <a href="#solutions" class="dropdown-item">
+              <span class="dropdown-item-icon">🌾</span>
+              <div>
+                <strong>Machinery Scarcity → Smart Booking</strong>
+                <small>Solving real farmer pain points</small>
+              </div>
+            </a>
+          </div>
+        </li>
+
+        <!-- 3. Dashboard -->
+        <li id="dashboardNavHolder">
+          <a href="pages/home.html" class="nav-link-item" id="dashboardNavLink">
+            📊 <span data-i18n="nav.home">Dashboard</span>
+          </a>
+        </li>
+
+        <!-- 4. F&Q -->
+        <li>
+          <a href="#faq" class="nav-link-item">
+            ❓ <span data-i18n="nav.faq">F&Q</span>
+          </a>
+        </li>
+
+        <!-- 5. Admin Login -->
+        <li>
+          <a href="pages/admin-login.html" class="nav-admin-btn" data-i18n="nav.admin_login">
+            🛡️ Admin Login
+          </a>
+        </li>
+
+        <!-- 6. Language Selector -->
+        <li id="langTogglePlaceholder"></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- ==================== Hero Section ==================== -->
+  <section class="hero-wrapper" id="hero">
+    <!-- Ambient Animated Background -->
+    <div class="hero-ambient-bg">
+      <div class="ambient-orb-1"></div>
+      <div class="ambient-orb-2"></div>
+      <div class="ambient-orb-3"></div>
+      <div class="hero-grid-pattern"></div>
+    </div>
+
+    <div class="hero-container">
+      <!-- Left Column: Large AgroTECH Branding, Pitch & Two Prominent Login Buttons -->
+      <div class="hero-left">
+        <div class="hero-badge-live">
+          <span class="live-dot"></span>
+          <span data-i18n="app.hero_badge">🌱 SMART AGRICULTURAL MECHANIZATION PLATFORM</span>
+        </div>
+
+        <h1 class="hero-main-title">
+          <span data-i18n="landing.headline_1">Smart Machinery.</span><br>
+          <span class="hero-title-accent" data-i18n="landing.headline_2">Smarter Farming.</span>
+        </h1>
+
+        <p class="hero-lead-text" data-i18n="landing.hero_desc">
+          AgroTECH connects farmers with agricultural machinery owners and rural service providers — enabling on-demand tractor ploughing, precision harvesting, drone spraying, drip irrigation, and mandi transport with transparent per-acre pricing.
+        </p>
+
+        <!-- Two Prominent Login Action Buttons -->
+        <div class="hero-login-actions">
+          <a href="pages/login.html?role=farmer" class="btn-farmer-login" aria-label="Farmer Login Portal">
+            <div class="btn-login-icon">🌾</div>
+            <div class="btn-login-text">
+              <span class="btn-login-title" data-i18n="nav.farmer_login">Farmer Login</span>
+              <small class="btn-login-sub">Rent Machinery & Services →</small>
+            </div>
+          </a>
+
+          <a href="pages/login.html?role=provider" class="btn-provider-login" aria-label="Provider Login Portal">
+            <div class="btn-login-icon">🚜</div>
+            <div class="btn-login-text">
+              <span class="btn-login-title" data-i18n="nav.provider_login">Provider Login</span>
+              <small class="btn-login-sub">List Fleet & Manage Jobs →</small>
+            </div>
+          </a>
+        </div>
+
+        <!-- Category Quick Discovery Chips -->
+        <div class="hero-quick-chips">
+          <a href="pages/search.html?cat=machinery" class="hero-chip-pill">🚜 <span data-i18n="cat.machinery">Tractors & Harvesters</span></a>
+          <a href="pages/search.html?cat=machinery" class="hero-chip-pill">🚁 <span>Agri-Drones</span></a>
+          <a href="pages/search.html?cat=irrigation" class="hero-chip-pill">💧 <span data-i18n="cat.irrigation">Drip Irrigation</span></a>
+          <a href="pages/search.html?cat=fertilizer" class="hero-chip-pill">🌿 <span data-i18n="cat.fertilizer">IFFCO Fertilizers</span></a>
+          <a href="pages/search.html?cat=seeds" class="hero-chip-pill">🌱 <span data-i18n="cat.seeds">Certified Seeds</span></a>
+          <a href="pages/search.html?cat=transport" class="hero-chip-pill">🚛 <span data-i18n="cat.transport">Mandi Logistics</span></a>
+        </div>
+      </div>
+
+      <!-- Right Column: Indian Farmer & Service Provider Partnership Visual (Handshake) -->
+      <div class="hero-right">
+        <div class="hero-visual-frame">
+          <div class="hero-img-stack">
+            <img src="assets/images/farmer_provider_handshake.jpg" alt="Indian farmer and agricultural service provider warmly shaking hands in lush green field with modern tractor" loading="eager">
+            <div class="hero-img-overlay-badge">
+              <span>🌾 Verified Partnership • Direct Farmer-Provider Contract</span>
+            </div>
+          </div>
+
+          <!-- Floating Live Card 1: Available Machine -->
+          <div class="hero-float-card float-card-1">
+            <div class="float-card-header">
+              <span class="float-card-status status-green-live">🟢 Available Today</span>
+              <span style="font-size:0.75rem;color:var(--gray-500)">Indore Hub</span>
+            </div>
+            <div class="float-card-title">Mahindra 575 DI Tractor</div>
+            <div class="float-card-meta">
+              <span class="float-card-price">₹800 <small style="color:var(--gray-500);font-weight:normal">/ acre</small></span>
+              <span>⭐ 4.8 (Active Driver)</span>
+            </div>
+          </div>
+
+          <!-- Floating Live Card 2: Dispatch Scheduled -->
+          <div class="hero-float-card float-card-2">
+            <div class="float-card-header">
+              <span class="float-card-status status-blue-confirmed">✅ Dispatch Scheduled</span>
+              <span style="font-size:0.75rem;color:var(--gray-500)">Tomorrow 8:00 AM</span>
+            </div>
+            <div class="float-card-title">Modern Combine Harvester</div>
+            <div class="float-card-meta">
+              <span>Farmer: Madhur P. (3 Acres)</span>
+              <span style="color:#0284c7;font-weight:700">SMS Sent ✓</span>
+            </div>
+          </div>
+
+          <!-- Floating Live Card 3: Zero Middlemen Guarantee -->
+          <div class="hero-float-card float-card-3">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:1.2rem">⚡</span>
+              <div>
+                <strong style="display:block;color:#15803d;font-size:0.82rem">100% Direct Payouts</strong>
+                <small style="color:var(--gray-600);font-size:0.72rem">Zero Middleman Commission</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Live Seasonal Operations Ticker Strip ==================== -->
+  <div class="live-ticker-strip">
+    <div class="ticker-track">
+      <div class="ticker-item"><span class="ticker-badge">LIVE</span> 🌾 Wheat & Soybean Harvesting in Full Swing Across Regional Hubs</div>
+      <div class="ticker-item"><span class="ticker-badge">ON-DEMAND</span> 🚜 Precision Laser Land Levelling Available in Your Village Radius</div>
+      <div class="ticker-item"><span class="ticker-badge">TECH</span> 🚁 Multi-Rotor Agri-Drone Precision Foliar Spray Booking Open</div>
+      <div class="ticker-item"><span class="ticker-badge">WATER SAVER</span> 💧 Automatic Micro-Drip Irrigation Kits Ready for Dispatch</div>
+      <div class="ticker-item"><span class="ticker-badge">LOGISTICS</span> 🚛 Mandi Grain Transport Available 24/7 with GPS Live Tracking</div>
+      <div class="ticker-item"><span class="ticker-badge">SEEDS & INPUTS</span> 🌱 IFFCO Certified Seeds & Bio-Nutrients at Standard Mandi Rates</div>
+      <!-- Duplicate for seamless infinite loop -->
+      <div class="ticker-item"><span class="ticker-badge">LIVE</span> 🌾 Wheat & Soybean Harvesting in Full Swing Across Regional Hubs</div>
+      <div class="ticker-item"><span class="ticker-badge">ON-DEMAND</span> 🚜 Precision Laser Land Levelling Available in Your Village Radius</div>
+      <div class="ticker-item"><span class="ticker-badge">TECH</span> 🚁 Multi-Rotor Agri-Drone Precision Foliar Spray Booking Open</div>
+      <div class="ticker-item"><span class="ticker-badge">WATER SAVER</span> 💧 Automatic Micro-Drip Irrigation Kits Ready for Dispatch</div>
+      <div class="ticker-item"><span class="ticker-badge">LOGISTICS</span> 🚛 Mandi Grain Transport Available 24/7 with GPS Live Tracking</div>
+      <div class="ticker-item"><span class="ticker-badge">SEEDS & INPUTS</span> 🌱 IFFCO Certified Seeds & Bio-Nutrients at Standard Mandi Rates</div>
+    </div>
+  </div>
+
+  <!-- ==================== Core Value Pillars & Commitments ==================== -->
+  <section class="pillars-section">
+    <div class="pillars-grid">
+      <div class="pillar-card reveal-on-scroll delay-1">
+        <div class="pillar-icon-box">🚜</div>
+        <div>
+          <h4 class="pillar-title" data-i18n="landing.pillar_machines_title">On-Demand Machinery</h4>
+          <p class="pillar-desc" data-i18n="landing.pillar_machines_desc">Instant access to tractors, harvesters, rotavators, and implements within your local village radius.</p>
+        </div>
+      </div>
+
+      <div class="pillar-card reveal-on-scroll delay-2">
+        <div class="pillar-icon-box">💰</div>
+        <div>
+          <h4 class="pillar-title" data-i18n="landing.pillar_pricing_title">Transparent Acre Rates</h4>
+          <p class="pillar-desc" data-i18n="landing.pillar_pricing_desc">Standardized per-acre and per-day pricing with zero middlemen markups or surprise charges.</p>
+        </div>
+      </div>
+
+      <div class="pillar-card reveal-on-scroll delay-3">
+        <div class="pillar-icon-box">⚡</div>
+        <div>
+          <h4 class="pillar-title" data-i18n="landing.pillar_dispatch_title">Instant Sahyogi Dispatch</h4>
+          <p class="pillar-desc" data-i18n="landing.pillar_dispatch_desc">Real-time booking confirmation with direct phone communication with equipment operators.</p>
+        </div>
+      </div>
+
+      <div class="pillar-card reveal-on-scroll delay-4">
+        <div class="pillar-icon-box">🛡️</div>
+        <div>
+          <h4 class="pillar-title" data-i18n="landing.pillar_security_title">Pay After Inspection</h4>
+          <p class="pillar-desc" data-i18n="landing.pillar_security_desc">Inspect work completed on your acreage and pay securely via UPI or Cash upon satisfaction.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Problem vs AgroTech Smart Solution ==================== -->
+  <section class="section-pad" id="solutions" style="background:white">
+    <div class="container">
+      <div class="section-head reveal-on-scroll">
+        <div class="pill-section-tag" data-i18n="app.name">AgroTECH Breakthrough</div>
+        <h2 data-i18n="landing.prob_title">From Machinery Scarcity to Smart Digital Booking</h2>
+        <p data-i18n="landing.prob_subtitle">Solving real, daily challenges of Indian farmers through on-demand machinery access and verified service provider connectivity.</p>
+      </div>
+
+      <div class="prob-sol-grid">
+        <!-- Traditional Way (Pain Points) -->
+        <div class="prob-card reveal-on-scroll delay-1">
+          <h3 data-i18n="landing.traditional_way">❌ Traditional Farming Challenges</h3>
+          <ul class="pain-point-list">
+            <li>
+              <span class="point-icon-cross">✕</span>
+              <span><strong>Unpredictable Availability:</strong> Tractors and harvesters are unavailable when monsoon or harvesting window peaks.</span>
+            </li>
+            <li>
+              <span class="point-icon-cross">✕</span>
+              <span><strong>Hidden Pricing & Middlemen:</strong> Unregulated rates with brokers charging 20–30% extra commissions.</span>
+            </li>
+            <li>
+              <span class="point-icon-cross">✕</span>
+              <span><strong>Endless Manual Calling:</strong> Spending hours calling unverified machine owners with no guarantee of arrival.</span>
+            </li>
+            <li>
+              <span class="point-icon-cross">✕</span>
+              <span><strong>High Capital Burden:</strong> Small and marginal farmers cannot afford ₹8–12 Lakh machinery purchases.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- AgroTech Way (Smart Solution) -->
+        <div class="sol-card reveal-on-scroll delay-2">
+          <h3 data-i18n="landing.agrotech_way">✅ The AgroTech Smart Solution</h3>
+          <ul class="gain-point-list">
+            <li>
+              <span class="point-icon-check">✓</span>
+              <span><strong>1-Click Local Discovery:</strong> Real-time discovery of machinery, implements, and drivers in your village radius.</span>
+            </li>
+            <li>
+              <span class="point-icon-check">✓</span>
+              <span><strong>100% Transparent Rates:</strong> Standardized per-acre and per-day pricing with zero middleman markups.</span>
+            </li>
+            <li>
+              <span class="point-icon-check">✓</span>
+              <span><strong>Instant Booking & SMS Alerts:</strong> Direct booking confirmed by verified Sahyogis with live job tracking.</span>
+            </li>
+            <li>
+              <span class="point-icon-check">✓</span>
+              <span><strong>Shared Economy Model:</strong> Farmers rent only when needed, slashing input machinery capex by up to 80%.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Smart Acre & Operations Cost Estimator ==================== -->
+  <section class="calc-section" id="calculator">
+    <div class="container">
+      <div class="section-head reveal-on-scroll">
+        <div class="pill-section-tag" data-i18n="landing.calc_title">Interactive Tool</div>
+        <h2 data-i18n="landing.calc_title">Smart Acre & Machinery Cost Estimator</h2>
+        <p data-i18n="landing.calc_subtitle">Calculate instant rental estimates, time saved, and farm efficiency for your land.</p>
+      </div>
+
+      <div class="calc-box-card reveal-on-scroll">
+        <!-- Input Controls -->
+        <div>
+          <label style="font-weight:700;font-size:0.95rem;color:var(--gray-800)" data-i18n="landing.calc_select_machine">1. Select Machinery or Service:</label>
+          <div class="calc-machine-picker" id="calcMachineSelector">
+            <div class="calc-machine-btn active" data-rate="800" data-unit="per acre" data-name="Mahindra Tractor" data-hours-per-acre="1.5">
+              🚜 Mahindra 575 DI<br><small>₹800 / acre</small>
+            </div>
+            <div class="calc-machine-btn" data-rate="1000" data-unit="per acre" data-name="John Deere 5050D" data-hours-per-acre="1.2">
+              🚜 John Deere 5050D<br><small>₹1,000 / acre</small>
+            </div>
+            <div class="calc-machine-btn" data-rate="1200" data-unit="per acre" data-name="Combine Harvester" data-hours-per-acre="0.8">
+              🌾 Combine Harvester<br><small>₹1,200 / acre</small>
+            </div>
+            <div class="calc-machine-btn" data-rate="500" data-unit="per acre" data-name="Heavy Rotavator" data-hours-per-acre="1.0">
+              ⚙️ Fieldking Rotavator<br><small>₹500 / acre</small>
+            </div>
+            <div class="calc-machine-btn" data-rate="450" data-unit="per acre" data-name="Agri-Drone Spraying" data-hours-per-acre="0.3">
+              🚁 Agri-Drone Spraying<br><small>₹450 / acre</small>
+            </div>
+            <div class="calc-machine-btn" data-rate="3500" data-unit="per kit" data-name="Drip Irrigation Kit" data-hours-per-acre="0.5">
+              💧 Drip Irrigation Kit<br><small>₹3,500 / kit</small>
+            </div>
+          </div>
+
+          <!-- Acreage Slider -->
+          <div class="calc-slider-wrap">
+            <div class="slider-label-row">
+              <span data-i18n="landing.calc_land_acres">Land Area / Quantity:</span>
+              <span class="slider-val-badge" id="calcAcreBadge">3 Acres</span>
+            </div>
+            <input type="range" id="calcAcreSlider" min="1" max="25" value="3" class="calc-slider-input" aria-label="Select land area in acres">
+            <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--gray-500);margin-top:6px">
+              <span>1 Acre (Small Farm)</span>
+              <span>10 Acres</span>
+              <span>25 Acres (Large Holding)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-Time Calculation Result Panel -->
+        <div class="calc-result-panel">
+          <div class="calc-res-label" data-i18n="landing.calc_est_total">Estimated Rental Cost</div>
+          <div class="calc-res-big" id="calcCostDisplay">₹2,400</div>
+
+          <div class="calc-metrics-grid">
+            <div class="calc-mini-metric">
+              <strong id="calcTimeSavedDisplay">~18 Hours</strong>
+              <small data-i18n="landing.calc_time_saved">Manual Labor Saved</small>
+            </div>
+            <div class="calc-mini-metric">
+              <strong id="calcDieselEfficiency">65% Cheaper</strong>
+              <small>Than Machine Ownership</small>
+            </div>
+          </div>
+
+          <a href="pages/search.html" class="btn btn-primary btn-full" id="calcBookCtaBtn" style="background:#10b981;font-weight:700" data-i18n="landing.calc_book_cta">
+            Book This Machine Now →
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== How AgroTech Works ==================== -->
+  <section class="section-pad" id="how-it-works" style="background:white">
+    <div class="container">
+      <div class="section-head reveal-on-scroll">
+        <div class="pill-section-tag" data-i18n="app.name">Seamless Workflow</div>
+        <h2 data-i18n="landing.how_title">How AgroTech Works</h2>
+        <p data-i18n="landing.how_subtitle">5 simple steps from machinery discovery to completed farm operations.</p>
+      </div>
+
+      <div class="how-steps-grid">
+        <!-- Step 1 -->
+        <div class="how-step-item reveal-on-scroll delay-1">
+          <div class="how-num-badge">01</div>
+          <h3 data-i18n="landing.step1_title">01 — Discover</h3>
+          <p data-i18n="landing.step1_desc">Search tractors, harvesters, rotavators, and farm inputs available in your local radius.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="how-step-item reveal-on-scroll delay-2">
+          <div class="how-num-badge">02</div>
+          <h3 data-i18n="landing.step2_title">02 — Compare</h3>
+          <p data-i18n="landing.step2_desc">Review provider ratings, equipment HP, transparent per-acre rates, and specs.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="how-step-item reveal-on-scroll delay-3">
+          <div class="how-num-badge">03</div>
+          <h3 data-i18n="landing.step3_title">03 — Request</h3>
+          <p data-i18n="landing.step3_desc">Submit your land acreage and preferred schedule with one click and zero hassle.</p>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="how-step-item reveal-on-scroll delay-4">
+          <div class="how-num-badge">04</div>
+          <h3 data-i18n="landing.step4_title">04 — Connect</h3>
+          <p data-i18n="landing.step4_desc">Sahyogi confirms, dispatches equipment, and updates you via instant SMS & app alert.</p>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="how-step-item reveal-on-scroll delay-4">
+          <div class="how-num-badge">05</div>
+          <h3 data-i18n="landing.step5_title">05 — Farm Smarter</h3>
+          <p data-i18n="landing.step5_desc">Precision farm operations completed on time. Pay securely with Cash or UPI upon completion.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Farmer Spotlight (Authentic Imagery & Real Value) ==================== -->
+  <section class="section-pad" id="farmer-spotlight" style="background:#f8faf8">
+    <div class="split-spotlight-section">
+      <div class="spotlight-img-frame reveal-on-scroll">
+        <img src="assets/images/farmer_portrait.jpg" alt="Indian farmer in lush green agricultural crop field holding smartphone with AgroTech platform" loading="lazy">
+        <div class="spotlight-overlay-badge">
+          <span>🌾 Empowered Indian Farmer • Digital Agriculture</span>
+        </div>
+      </div>
+      <div class="spotlight-content reveal-on-scroll delay-2">
+        <div class="pill-section-tag" data-i18n="role.badge_farmer">Farmer Empowerment</div>
+        <h2 data-i18n="landing.farmer_first_title">Technology Built for the Reality of Indian Agriculture</h2>
+        <p>AgroTech empowers every farmer — from marginal smallholders to progressive growers — with access to modern mechanized farming without the crippling burden of machinery debt.</p>
+        <ul class="gain-point-list" style="margin-bottom:2rem">
+          <li><span class="point-icon-check">✓</span> <span><strong>40% Slashed Production Costs:</strong> Rent machinery only for exact acreage without capital lock-in.</span></li>
+          <li><span class="point-icon-check">✓</span> <span><strong>On-Time Sowing & Harvesting:</strong> Guaranteed machine arrival during critical weather windows.</span></li>
+          <li><span class="point-icon-check">✓</span> <span><strong>Bilingual Accessibility:</strong> Complete platform available in Hindi (हिंदी) and English.</span></li>
+          <li><span class="point-icon-check">✓</span> <span><strong>SMS & In-App Tracking:</strong> Real-time alerts as the machinery reaches your farm gate.</span></li>
+        </ul>
+        <a href="pages/login.html?role=farmer" class="btn btn-primary btn-lg" data-i18n="landing.farmer_portal_btn">🌾 Enter Farmer Portal →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Sahyogi (Provider) Spotlight (Fleet Owner & Rural Entrepreneur) ==================== -->
+  <section class="section-pad" id="sahyogi-spotlight" style="background:white">
+    <div class="split-spotlight-section reverse">
+      <div class="spotlight-img-frame reveal-on-scroll">
+        <img src="assets/images/provider_sahyogi.jpg" alt="Agricultural equipment provider standing proudly beside modern tractor with digital booking tablet" loading="lazy">
+        <div class="spotlight-overlay-badge">
+          <span>🚜 AgroTech Sahyogi • Equipment Fleet Partner</span>
+        </div>
+      </div>
+      <div class="spotlight-content reveal-on-scroll delay-2">
+        <div class="pill-section-tag" data-i18n="role.badge_provider">Provider Hub</div>
+        <h2 data-i18n="landing.sahyogi_title">Empowering Rural Machinery Owners & Agri-Entrepreneurs</h2>
+        <p data-i18n="landing.sahyogi_desc">Turn idle tractors and implements into steady seasonal income while serving fellow farmers in your local community.</p>
+        <ul class="gain-point-list" style="margin-bottom:2rem">
+          <li><span class="point-icon-check">✓</span> <span><strong>₹60,000 to ₹1,50,000 Seasonal Earnings:</strong> Monetize tractors and implements between crop cycles.</span></li>
+          <li><span class="point-icon-check">✓</span> <span><strong>Instant Digital Booking Queue:</strong> Receive verified farmer requests directly with acreage details.</span></li>
+          <li><span class="point-icon-check">✓</span> <span><strong>Direct UPI / Cash Settlement:</strong> Get paid directly with zero platform hold or hidden commissions.</span></li>
+          <li><span class="point-icon-check">✓</span> <span><strong>Fleet & Schedule Management:</strong> Easily manage drivers, implements, and service availability.</span></li>
+        </ul>
+        <a href="pages/login.html?role=provider" class="btn btn-primary btn-lg" style="background:#0284c7" data-i18n="landing.provider_portal_btn">🚜 Enter Sahyogi Portal →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Machinery & Smart Technology Showcase ==================== -->
+  <section class="section-pad" id="categories" style="background:#f8faf8">
+    <div class="container">
+      <div class="section-head reveal-on-scroll">
+        <div class="pill-section-tag" data-i18n="farmer.featured_services">Equipment & Inputs</div>
+        <h2>Agricultural Machinery & Farm Supplies</h2>
+        <p>Explore high-performance machinery, drones, irrigation kits, and farm supplies ready for dispatch.</p>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="showcase-filter-bar">
+        <button class="showcase-tab-btn active" data-filter="all">🚜 All Services</button>
+        <button class="showcase-tab-btn" data-filter="machinery">🚜 Tractors & Tillage</button>
+        <button class="showcase-tab-btn" data-filter="harvesting">🌾 Harvesting</button>
+        <button class="showcase-tab-btn" data-filter="drone">🚁 Precision Drones</button>
+        <button class="showcase-tab-btn" data-filter="irrigation">💧 Irrigation</button>
+        <button class="showcase-tab-btn" data-filter="fertilizer">🌿 Fertilizers</button>
+        <button class="showcase-tab-btn" data-filter="transport">🚛 Logistics</button>
+      </div>
+
+      <!-- Cards Grid -->
+      <div class="showcase-grid-cards" id="showcaseGrid">
+        <!-- Item 1: Heavy Tractor -->
+        <div class="machinery-card reveal-on-scroll" data-cat="machinery">
+          <div class="machinery-img-box">
+            <img src="assets/images/tractor_ploughing.jpg" alt="Modern Tractor Ploughing Field" loading="lazy">
+            <span class="machinery-badge-cat">Tillage</span>
+          </div>
+          <div class="machinery-card-body">
+            <div>
+              <h3 class="machinery-card-name">Mahindra 575 DI & Rotavator</h3>
+              <p class="machinery-card-desc">45HP heavy-duty tractor with 7-feet rotavator for deep soil tilling and fine seedbed preparation.</p>
+            </div>
+            <div>
+              <div class="machinery-meta-row">
+                <div class="machinery-price-tag">₹800 <span>/ acre</span></div>
+                <div style="font-size:0.85rem;color:#f59e0b">★ 4.8 (Indore Hub)</div>
+              </div>
+              <a href="pages/search.html?cat=machinery" class="btn btn-primary btn-full">Book Machine →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 2: Combine Harvester -->
+        <div class="machinery-card reveal-on-scroll" data-cat="harvesting">
+          <div class="machinery-img-box">
+            <img src="assets/images/combine_harvester.jpg" alt="Modern Combine Harvester in wheat field" loading="lazy">
+            <span class="machinery-badge-cat">Harvesting</span>
+          </div>
+          <div class="machinery-card-body">
+            <div>
+              <h3 class="machinery-card-name">Multi-Crop Combine Harvester</h3>
+              <p class="machinery-card-desc">High-speed mechanized harvesting for Wheat, Soybean, and Paddy. Minimizes grain loss below 1%.</p>
+            </div>
+            <div>
+              <div class="machinery-meta-row">
+                <div class="machinery-price-tag">₹1,200 <span>/ acre</span></div>
+                <div style="font-size:0.85rem;color:#f59e0b">★ 4.9 (Operator Incl.)</div>
+              </div>
+              <a href="pages/search.html?cat=machinery" class="btn btn-primary btn-full">Book Harvester →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 3: Agri-Drone Spraying -->
+        <div class="machinery-card reveal-on-scroll" data-cat="drone">
+          <div class="machinery-img-box">
+            <img src="assets/images/drone_spraying.jpg" alt="Agricultural Multi-Rotor Drone Spraying Crop Mist" loading="lazy">
+            <span class="machinery-badge-cat">Smart Tech</span>
+          </div>
+          <div class="machinery-card-body">
+            <div>
+              <h3 class="machinery-card-name">Precision Agri-Drone Spraying</h3>
+              <p class="machinery-card-desc">10L/16L multi-rotor drone for precision foliar bio-fertilizer & pesticide spraying in 8 mins/acre.</p>
+            </div>
+            <div>
+              <div class="machinery-meta-row">
+                <div class="machinery-price-tag">₹450 <span>/ acre</span></div>
+                <div style="font-size:0.85rem;color:#f59e0b">★ 4.9 (Certified Pilot)</div>
+              </div>
+              <a href="pages/search.html?cat=machinery" class="btn btn-primary btn-full">Book Drone →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 4: Drip Irrigation Kit -->
+        <div class="machinery-card reveal-on-scroll" data-cat="irrigation">
+          <div class="machinery-img-box">
+            <img src="assets/images/smart_irrigation.jpg" alt="Automatic Drip Irrigation Kit" loading="lazy">
+            <span class="machinery-badge-cat">Irrigation</span>
+          </div>
+          <div class="machinery-card-body">
+            <div>
+              <h3 class="machinery-card-name">Automatic Micro-Drip Irrigation Kit</h3>
+              <p class="machinery-card-desc">Complete drip tubing and emitter system for 1 acre. Saves up to 60% water and boosts crop yield.</p>
+            </div>
+            <div>
+              <div class="machinery-meta-row">
+                <div class="machinery-price-tag">₹3,500 <span>/ kit</span></div>
+                <div style="font-size:0.85rem;color:#f59e0b">★ 4.8 (With Setup)</div>
+              </div>
+              <a href="pages/search.html?cat=irrigation" class="btn btn-primary btn-full">Order Kit →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 5: IFFCO DAP Fertilizer -->
+        <div class="machinery-card reveal-on-scroll" data-cat="fertilizer">
+          <div class="machinery-img-box">
+            <img src="https://5.imimg.com/data5/SELLER/Default/2022/5/NJ/VT/MB/26553143/dap-fertilizer-500x500.jpg" alt="IFFCO DAP Fertilizer 50kg Bag" loading="lazy">
+            <span class="machinery-badge-cat">Supplies</span>
+          </div>
+          <div class="machinery-card-body">
+            <div>
+              <h3 class="machinery-card-name">IFFCO DAP Fertilizer (50kg Bag)</h3>
+              <p class="machinery-card-desc">Original certified DAP bio-fertilizer for vigorous root development and early plant vigor.</p>
+            </div>
+            <div>
+              <div class="machinery-meta-row">
+                <div class="machinery-price-tag">₹1,350 <span>/ bag</span></div>
+                <div style="font-size:0.85rem;color:#f59e0b">★ 4.7 (Mandi Stock)</div>
+              </div>
+              <a href="pages/search.html?cat=fertilizer" class="btn btn-primary btn-full">Order Fertilizer →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 6: Mandi Logistics -->
+        <div class="machinery-card reveal-on-scroll" data-cat="transport">
+          <div class="machinery-img-box">
+            <img src="https://5.imimg.com/data5/SELLER/Default/2022/3/QF/XN/XJ/149399990/mini-truck-500x500.jpg" alt="5-Ton Farm Crop Transport Truck" loading="lazy">
+            <span class="machinery-badge-cat">Logistics</span>
+          </div>
+          <div class="machinery-card-body">
+            <div>
+              <h3 class="machinery-card-name">5-Ton Mandi Farm Logistics Mini Truck</h3>
+              <p class="machinery-card-desc">Doorstep farm-to-mandi crop transport with GPS live tracking and verified licensed driver.</p>
+            </div>
+            <div>
+              <div class="machinery-meta-row">
+                <div class="machinery-price-tag">₹2,500 <span>/ trip</span></div>
+                <div style="font-size:0.85rem;color:#f59e0b">★ 4.8 (Indore / Ujjain)</div>
+              </div>
+              <a href="pages/search.html?cat=transport" class="btn btn-primary btn-full">Book Transport →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Seasonal Crop Mechanization Calendar ==================== -->
+  <section class="calendar-section" id="calendar">
+    <div class="container">
+      <div class="section-head reveal-on-scroll">
+        <div class="pill-section-tag">Seasonal Planning</div>
+        <h2>Crop Mechanization Roadmap & Calendar</h2>
+        <p>Ensure timely agricultural operations by scheduling equipment according to your seasonal crop cycle.</p>
+      </div>
+
+      <div class="calendar-grid">
+        <!-- Kharif Season -->
+        <div class="season-card season-kharif reveal-on-scroll delay-1">
+          <div>
+            <div class="season-header">
+              <span class="season-tag">Kharif (June – Oct)</span>
+              <span style="font-size:1.3rem">🌧️</span>
+            </div>
+            <h3 class="season-title">Paddy, Soybean, Cotton & Maize</h3>
+            <p class="season-crops">Peak Monsoon Sowing & Harvesting Cycles</p>
+            <ul class="season-stages-list">
+              <li class="season-stage-item"><span class="stage-bullet">1</span> <strong>Land Prep:</strong> Laser land levelling & disc harrow ploughing.</li>
+              <li class="season-stage-item"><span class="stage-bullet">2</span> <strong>Sowing:</strong> Pneumatic seed drills & mechanical transplanters.</li>
+              <li class="season-stage-item"><span class="stage-bullet">3</span> <strong>Crop Care:</strong> Precision agri-drone foliar bio-spraying.</li>
+              <li class="season-stage-item"><span class="stage-bullet">4</span> <strong>Harvest:</strong> Track combine harvesters for wet fields.</li>
+            </ul>
+          </div>
+          <a href="pages/search.html?cat=machinery" class="btn btn-outline btn-full">Explore Kharif Machinery →</a>
+        </div>
+
+        <!-- Rabi Season -->
+        <div class="season-card season-rabi reveal-on-scroll delay-2">
+          <div>
+            <div class="season-header">
+              <span class="season-tag">Rabi (Nov – April)</span>
+              <span style="font-size:1.3rem">🌾</span>
+            </div>
+            <h3 class="season-title">Wheat, Mustard, Gram & Potato</h3>
+            <p class="season-crops">Winter Crop Bed Preparation & Threshing</p>
+            <ul class="season-stages-list">
+              <li class="season-stage-item"><span class="stage-bullet">1</span> <strong>Tillage:</strong> Heavy rotavator seedbed preparation.</li>
+              <li class="season-stage-item"><span class="stage-bullet">2</span> <strong>Sowing:</strong> Zero-till seed-cum-fertilizer drills.</li>
+              <li class="season-stage-item"><span class="stage-bullet">3</span> <strong>Irrigation:</strong> Micro-sprinkler and drip line deployment.</li>
+              <li class="season-stage-item"><span class="stage-bullet">4</span> <strong>Harvest:</strong> Multi-crop combine harvesters & straw balers.</li>
+            </ul>
+          </div>
+          <a href="pages/search.html?cat=machinery" class="btn btn-outline btn-full">Explore Rabi Machinery →</a>
+        </div>
+
+        <!-- Zaid Season -->
+        <div class="season-card season-zaid reveal-on-scroll delay-3">
+          <div>
+            <div class="season-header">
+              <span class="season-tag">Zaid (March – June)</span>
+              <span style="font-size:1.3rem">☀️</span>
+            </div>
+            <h3 class="season-title">Vegetables, Pulses, Melons & Moong</h3>
+            <p class="season-crops">Summer Irrigation & Quick-Turnaround Logistics</p>
+            <ul class="season-stages-list">
+              <li class="season-stage-item"><span class="stage-bullet">1</span> <strong>Bed Forming:</strong> Raised bed makers & mulch laying tools.</li>
+              <li class="season-stage-item"><span class="stage-bullet">2</span> <strong>Watering:</strong> Automatic drip automation & solar pump kits.</li>
+              <li class="season-stage-item"><span class="stage-bullet">3</span> <strong>Crop Care:</strong> Boom sprayers for horticultural protection.</li>
+              <li class="season-stage-item"><span class="stage-bullet">4</span> <strong>Transport:</strong> 2-5 Ton ventilated Mandi logistics trucks.</li>
+            </ul>
+          </div>
+          <a href="pages/search.html?cat=transport" class="btn btn-outline btn-full">Explore Zaid Logistics →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Platform Roles & Ecosystem ==================== -->
+  <section class="section-pad" id="ecosystem" style="background:white">
+    <div class="container">
+      <div class="section-head reveal-on-scroll">
+        <div class="pill-section-tag" data-i18n="app.name">Complete Ecosystem</div>
+        <h2>Built for Farmers, Service Providers & Administrators</h2>
+        <p>Dedicated workspaces with specialized privileges for seamless agricultural operations.</p>
+      </div>
+
+      <div class="roles-ecosystem-grid">
+        <!-- Farmer Card -->
+        <div class="role-ecosystem-card farmer-card reveal-on-scroll delay-1">
+          <div class="role-icon-box farmer-icon-box">🌾</div>
+          <h3 style="color:#1b5e20;margin-bottom:8px" data-i18n="role.badge_farmer">Farmer</h3>
+          <p style="color:var(--gray-600);font-size:0.9rem;margin-bottom:1.25rem" data-i18n="auth.role_farmer_desc">
+            Browse and rent tractors, combine harvesters, irrigation kits, and farm inputs from local providers with instant booking and tracking.
+          </p>
+          <ul class="role-checklist">
+            <li><span class="check-dot">✓</span> <span data-i18n="nav.find_services">Find Services & Machinery</span></li>
+            <li><span class="check-dot">✓</span> <span data-i18n="nav.my_requests">Send Service Requests</span></li>
+            <li><span class="check-dot">✓</span> <span data-i18n="nav.alerts">Real-Time Alerts & Updates</span></li>
+          </ul>
+          <a href="pages/login.html?role=farmer" class="btn btn-primary btn-full" data-i18n="nav.login">Farmer Sign In →</a>
+        </div>
+
+        <!-- Provider Card -->
+        <div class="role-ecosystem-card provider-card reveal-on-scroll delay-2">
+          <div class="role-icon-box provider-icon-box">🚜</div>
+          <h3 style="color:#0369a1;margin-bottom:8px" data-i18n="role.badge_provider">Service Provider</h3>
+          <p style="color:var(--gray-600);font-size:0.9rem;margin-bottom:1.25rem" data-i18n="auth.role_provider_desc">
+            List equipment, machinery, fertilizer supplies, and transport services. Accept farmer requests and manage bookings seamlessly.
+          </p>
+          <ul class="role-checklist">
+            <li><span class="check-dot" style="background:#e0f2fe;color:#0284c7">✓</span> <span data-i18n="nav.my_services">Manage Equipment Listings</span></li>
+            <li><span class="check-dot" style="background:#e0f2fe;color:#0284c7">✓</span> <span data-i18n="nav.provider_requests">Accept / Reject Requests</span></li>
+            <li><span class="check-dot" style="background:#e0f2fe;color:#0284c7">✓</span> <span data-i18n="nav.add_service">Add New Services</span></li>
+          </ul>
+          <a href="pages/login.html?role=provider" class="btn btn-primary btn-full" style="background:#0284c7" data-i18n="nav.login">Provider Sign In →</a>
+        </div>
+
+        <!-- Admin Card -->
+        <div class="role-ecosystem-card admin-card reveal-on-scroll delay-3">
+          <div class="role-icon-box admin-icon-box">🛡️</div>
+          <h3 style="color:#92400e;margin-bottom:8px" data-i18n="role.badge_admin">Administrator</h3>
+          <p style="color:var(--gray-600);font-size:0.9rem;margin-bottom:1.25rem">
+            Complete platform management: oversee farmers and providers, monitor service quality, verify listings, and track platform analytics.
+          </p>
+          <ul class="role-checklist">
+            <li><span class="check-dot" style="background:#fef3c7;color:#b45309">✓</span> <span data-i18n="nav.admin_farmers">Farmer & Provider Management</span></li>
+            <li><span class="check-dot" style="background:#fef3c7;color:#b45309">✓</span> <span data-i18n="nav.admin_services">Services & Requests Oversight</span></li>
+            <li><span class="check-dot" style="background:#fef3c7;color:#b45309">✓</span> <span data-i18n="nav.admin_reports">Reports & Broadcast Announcements</span></li>
+          </ul>
+          <a href="pages/admin-login.html" class="btn btn-secondary btn-full" data-i18n="auth.admin_portal_link">Admin Portal →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Testimonials ==================== -->
+  <section class="section-pad" id="testimonials" style="background:#f8faf8">
+    <div class="container">
+      <div class="section-head reveal-on-scroll">
+        <div class="pill-section-tag">Voices from the Field</div>
+        <h2>Trusted by Farmers & Equipment Providers Across India</h2>
+        <p>Real stories of productivity, higher crop yields, and seasonal savings.</p>
+      </div>
+
+      <div class="testimonial-grid-cards">
+        <div class="test-card-item reveal-on-scroll delay-1">
+          <div class="test-stars-row">★★★★★</div>
+          <p class="test-text-quote">"During wheat harvest season, getting a combine harvester used to take 4 days of calling brokers. On AgroTECH, I booked one in 2 minutes for ₹1,200/acre. It arrived the next morning on time!"</p>
+          <div class="test-farmer-profile">
+            <div class="test-farmer-avatar">MP</div>
+            <div>
+              <strong style="display:block;color:var(--gray-900)">Madhur Pratap Singh</strong>
+              <small style="color:var(--gray-500)">Wheat Farmer • Indore, MP</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="test-card-item reveal-on-scroll delay-2">
+          <div class="test-stars-row">★★★★★</div>
+          <p class="test-text-quote">"I own 2 Mahindra tractors that used to sit idle after my sowing was done. By registering as an AgroTECH Provider, I earned over ₹65,000 renting them out to neighboring farms this season."</p>
+          <div class="test-farmer-profile">
+            <div class="test-farmer-avatar" style="background:#0284c7">RP</div>
+            <div>
+              <strong style="display:block;color:var(--gray-900)">Rajesh Patel</strong>
+              <small style="color:var(--gray-500)">Agri Service Provider • Sehore, MP</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="test-card-item reveal-on-scroll delay-3">
+          <div class="test-stars-row">★★★★★</div>
+          <p class="test-text-quote">"The automatic drip irrigation kit I booked through AgroTECH reduced my water consumption by half. My soybean crop yield increased by 25% with zero operational headache."</p>
+          <div class="test-farmer-profile">
+            <div class="test-farmer-avatar">DK</div>
+            <div>
+              <strong style="display:block;color:var(--gray-900)">Dinesh Kumar</strong>
+              <small style="color:var(--gray-500)">Progressive Farmer • Ujjain, MP</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Agri-Advisory & Smart Farming FAQ Accordion ==================== -->
+  <section class="faq-section" id="faq">
+    <div class="container">
+      <div class="section-head reveal-on-scroll">
+        <div class="pill-section-tag">Agri-Advisory</div>
+        <h2>Frequently Asked Questions</h2>
+        <p>Everything you need to know about machinery booking, payments, fuel policy, and operator dispatch.</p>
+      </div>
+
+      <div class="faq-accordion-wrap">
+        <!-- FAQ 1 -->
+        <div class="faq-item active reveal-on-scroll">
+          <div class="faq-question">
+            <span>How is the per-acre machinery rental cost calculated?</span>
+            <span class="faq-icon">▾</span>
+          </div>
+          <div class="faq-answer">
+            Pricing is standardized based on equipment horsepower, implements used, and exact acreage. When you book on AgroTECH, the total price is calculated upfront with zero hidden broker fees. You only pay for the verified acreage worked on your field.
+          </div>
+        </div>
+
+        <!-- FAQ 2 -->
+        <div class="faq-item reveal-on-scroll">
+          <div class="faq-question">
+            <span>Is diesel/fuel and driver included with the machinery?</span>
+            <span class="faq-icon">▾</span>
+          </div>
+          <div class="faq-answer">
+            Yes! For heavy machinery like tractors and combine harvesters, the listing description explicitly states operator and diesel inclusion. The provider sends an experienced operator along with the machinery to ensure precision field work.
+          </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="faq-item reveal-on-scroll">
+          <div class="faq-question">
+            <span>What happens if weather interrupts the work or rain occurs?</span>
+            <span class="faq-icon">▾</span>
+          </div>
+          <div class="faq-answer">
+            AgroTECH provides a flexible rescheduling policy. If sudden rain or adverse weather halts field operations, you and the provider can reschedule the remaining acreage to the next suitable sunny date without cancellation penalties.
+          </div>
+        </div>
+
+        <!-- FAQ 4 -->
+        <div class="faq-item reveal-on-scroll">
+          <div class="faq-question">
+            <span>What if a machine breaks down during field operation?</span>
+            <span class="faq-icon">▾</span>
+          </div>
+          <div class="faq-answer">
+            In the rare event of mechanical failure, our local service network dispatches a replacement tractor or harvester within the same cluster to ensure your sowing or harvesting schedule is never delayed.
+          </div>
+        </div>
+
+        <!-- FAQ 5 -->
+        <div class="faq-item reveal-on-scroll">
+          <div class="faq-question">
+            <span>How and when do I make payment for the service?</span>
+            <span class="faq-icon">▾</span>
+          </div>
+          <div class="faq-answer">
+            AgroTECH follows a farmer-first policy: you inspect the completed work on your field first, and then pay the confirmed amount directly to the service provider via UPI, PhonePe, Google Pay, or Cash upon job completion.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Call to Action (CTA) Banner ==================== -->
+  <section class="landing-cta-banner" id="get-started">
+    <div class="cta-inner-box reveal-on-scroll">
+      <h2 data-i18n="landing.cta_title">Ready to Make Farming Smarter?</h2>
+      <p data-i18n="landing.cta_subtitle">Join thousands of farmers and verified machinery partners growing together on AgroTECH.</p>
+      <div class="cta-btn-group">
+        <a href="pages/register.html?role=farmer" class="btn btn-primary btn-lg" style="background:#10b981;font-weight:700" data-i18n="landing.cta_farmer">
+          🌾 Start Farming Smarter (Farmer)
+        </a>
+        <a href="pages/register.html?role=provider" class="btn btn-outline btn-lg" style="border-color:white;color:white;font-weight:700" data-i18n="landing.cta_sahyogi">
+          🚜 List Your Machinery (Provider)
+        </a>
+      </div>
+      <div style="margin-top:1.75rem;font-size:0.88rem;color:rgba(255,255,255,0.8)">
+        📞 Kisan Helpline: <strong>+91 11 1234 5678</strong> (Toll Free • Mon-Sat 8AM - 8PM)
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== Rich Modern Footer ==================== -->
+  <footer class="rich-landing-footer">
+    <div class="footer-inner-grid">
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <span style="font-size:1.6rem">🌱</span>
+          <span style="font-family:'Sora',sans-serif;font-size:1.4rem;font-weight:800;color:white">Agro<span style="color:#69f0ae">TECH</span></span>
+        </div>
+        <p style="font-size:0.88rem;line-height:1.65;color:rgba(255,255,255,0.65);max-width:320px;margin-bottom:1.25rem">
+          India's premier digital agricultural platform connecting farmers with farm machinery, precision drones, certified inputs, and trusted service providers.
+        </p>
+        <div style="font-size:0.8rem;color:#86efac;font-weight:700">
+          🇮🇳 Make in India • Digital Agriculture Initiative
+        </div>
+      </div>
+
+      <div>
+        <h4 class="footer-col-head">Quick Navigation</h4>
+        <ul class="footer-nav-list">
+          <li><a href="#hero">Home</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#calculator">Cost Estimator</a></li>
+          <li><a href="#calendar">Crop Calendar</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="pages/search.html">Find Machinery</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="footer-col-head">Role Portals</h4>
+        <ul class="footer-nav-list">
+          <li><a href="pages/login.html?role=farmer">Farmer Portal</a></li>
+          <li><a href="pages/login.html?role=provider">Provider Portal</a></li>
+          <li><a href="pages/admin-login.html">Administrator Control</a></li>
+          <li><a href="pages/help.html">Support & Help Center</a></li>
+          <li><a href="pages/register.html">Create New Account</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="footer-col-head">Agricultural Services</h4>
+        <ul class="footer-nav-list">
+          <li><a href="pages/search.html?cat=machinery">Tractor & Harvester Rental</a></li>
+          <li><a href="pages/search.html?cat=machinery">Precision Drone Spraying</a></li>
+          <li><a href="pages/search.html?cat=irrigation">Drip & Sprinkler Systems</a></li>
+          <li><a href="pages/search.html?cat=fertilizer">IFFCO DAP & Fertilizers</a></li>
+          <li><a href="pages/search.html?cat=seeds">High-Yield Certified Seeds</a></li>
+          <li><a href="pages/search.html?cat=transport">Farm to Mandi Logistics</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom-bar">
+      <div>© 2026 AgroTECH • All Rights Reserved. Built with 💚 for India's Farmers.</div>
+      <div style="display:flex;gap:16px">
+        <span>🔒 Secure 256-Bit SSL</span>
+        <span>⚡ FastAPI + SQLite/Supabase</span>
+        <span>🌐 English & हिंदी</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== Scripts & Interactivity ==================== -->
+  <script src="js/i18n.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/global.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Language Toggle render
+      const langHolder = document.getElementById('langTogglePlaceholder');
+      if (langHolder && typeof AgroI18n !== 'undefined') {
+        langHolder.innerHTML = AgroI18n.renderLanguageToggle();
+      }
+
+      // 2. Dynamic Auth Dashboard state
+      const dashboardHolder = document.getElementById('dashboardNavHolder');
+      if (dashboardHolder && typeof AgroData !== 'undefined' && AgroData.isLoggedIn()) {
+        const user = AgroData.getUser();
+        const role = AgroData.getRole();
+        let targetHref = 'pages/home.html';
+        if (role === 'admin') targetHref = 'pages/admin-panel.html';
+        else if (role === 'provider' || role === 'seller') targetHref = 'pages/provider-dashboard.html';
+
+        dashboardHolder.innerHTML = `
+          <a href="${targetHref}" class="nav-link-item" style="color:#69f0ae;font-weight:700">
+            📊 ${user.name ? user.name.split(' ')[0] : 'My'} Dashboard
+          </a>
+        `;
+      }
+
+      // 3. Sticky Navbar on Scroll
+      const navEl = document.getElementById('mainNav');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 40) navEl.classList.add('scrolled');
+        else navEl.classList.remove('scrolled');
+      });
+
+      // 4. Mobile Menu Toggle
+      const mobileBtn = document.getElementById('mobileMenuBtn');
+      const navLinks = document.getElementById('navLinks');
+      if (mobileBtn && navLinks) {
+        mobileBtn.addEventListener('click', () => {
+          navLinks.classList.toggle('mobile-open');
+        });
+      }
+
+      // 5. About Dropdown Mobile Click Support
+      const aboutWrap = document.getElementById('aboutDropdownWrap');
+      const aboutBtn = document.getElementById('aboutDropdownBtn');
+      if (aboutBtn && aboutWrap) {
+        aboutBtn.addEventListener('click', (e) => {
+          if (window.innerWidth <= 768) {
+            e.preventDefault();
+            aboutWrap.classList.toggle('open');
+            const isOpen = aboutWrap.classList.contains('open');
+            aboutBtn.setAttribute('aria-expanded', isOpen);
+          }
+        });
+      }
+
+      // Close dropdown when clicking on dropdown items on mobile
+      const dropdownItems = document.querySelectorAll('.nav-dropdown-menu .dropdown-item');
+      dropdownItems.forEach(item => {
+        item.addEventListener('click', () => {
+          if (navLinks && navLinks.classList.contains('mobile-open')) {
+            navLinks.classList.remove('mobile-open');
+          }
+          if (aboutWrap) aboutWrap.classList.remove('open');
+        });
+      });
+
+      // 6. Scroll Reveal with Intersection Observer
+      const reveals = document.querySelectorAll('.reveal-on-scroll');
+      if ('IntersectionObserver' in window) {
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+        reveals.forEach(el => revealObserver.observe(el));
+      } else {
+        reveals.forEach(el => el.classList.add('is-visible'));
+      }
+
+      // 7. Interactive Cost Estimator
+      const machineBtns = document.querySelectorAll('.calc-machine-btn');
+      const acreSlider = document.getElementById('calcAcreSlider');
+      const acreBadge = document.getElementById('calcAcreBadge');
+      const costDisplay = document.getElementById('calcCostDisplay');
+      const timeDisplay = document.getElementById('calcTimeSavedDisplay');
+      const effDisplay = document.getElementById('calcDieselEfficiency');
+
+      let currentRate = 800;
+      let currentUnit = 'per acre';
+      let currentHoursPerAcre = 1.5;
+
+      function updateCalculator() {
+        if (!acreSlider || !costDisplay) return;
+        const acres = parseInt(acreSlider.value, 10) || 1;
+        if (acreBadge) {
+          acreBadge.textContent = `${acres} ${acres === 1 ? 'Acre / Unit' : 'Acres / Units'}`;
+        }
+        
+        const totalCost = currentRate * acres;
+        costDisplay.textContent = `₹${totalCost.toLocaleString('en-IN')}`;
+
+        if (timeDisplay) {
+          const totalHoursSaved = Math.round(acres * currentHoursPerAcre * 4.5);
+          timeDisplay.textContent = `~${totalHoursSaved} Hours`;
+        }
+
+        if (effDisplay) {
+          if (currentRate >= 1000) effDisplay.textContent = '75% Faster';
+          else if (currentRate <= 500) effDisplay.textContent = '80% Savings';
+          else effDisplay.textContent = '65% Cheaper';
+        }
+      }
+
+      machineBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          machineBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentRate = parseFloat(btn.getAttribute('data-rate')) || 800;
+          currentUnit = btn.getAttribute('data-unit') || 'per acre';
+          currentHoursPerAcre = parseFloat(btn.getAttribute('data-hours-per-acre')) || 1.5;
+          updateCalculator();
+        });
+      });
+
+      if (acreSlider) {
+        acreSlider.addEventListener('input', updateCalculator);
+      }
+      updateCalculator();
+
+      // 8. Showcase Filter Tabs
+      const filterBtns = document.querySelectorAll('.showcase-tab-btn');
+      const cards = document.querySelectorAll('.machinery-card');
+
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const filter = btn.getAttribute('data-filter');
+
+          cards.forEach(card => {
+            const cat = card.getAttribute('data-cat');
+            if (filter === 'all' || cat === filter) {
+              card.style.display = 'flex';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        });
+      });
+
+      // 9. FAQ Accordion Interaction
+      const faqItems = document.querySelectorAll('.faq-item');
+      faqItems.forEach(item => {
+        const question = item.querySelector('.faq-question');
+        if (question) {
+          question.addEventListener('click', () => {
+            const wasActive = item.classList.contains('active');
+            faqItems.forEach(f => f.classList.remove('active'));
+            if (!wasActive) {
+              item.classList.add('active');
+            }
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

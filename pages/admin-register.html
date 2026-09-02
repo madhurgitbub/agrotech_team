@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Admin Register – AgroTECH</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #062b0a, #145a1c, #2e7d32);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+    .auth { width: min(500px, 100%); }
+    .brand { text-align: center; color: white; margin-bottom: 18px; }
+    .brand span { color: #69f0ae; }
+    .card {
+      background: white;
+      border-radius: 22px;
+      padding: 30px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.4);
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .note {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 12px;
+      border-radius: 10px;
+      color: #166534;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .links {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    .links a {
+      color: #2e7d32;
+      font-weight: 700;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth">
+    <div class="brand">
+      <div style="font-size:40px">🛡️</div>
+      <h1>Agro<span>TECH</span> Admin</h1>
+      <p data-i18n="admin.portal_title">Create an administrator account</p>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <h2 data-i18n="auth.register_title">Admin Registration</h2>
+        <div id="langToggleHolder"></div>
+      </div>
+      <div class="note">
+        Admin accounts have elevated privileges to manage farmers, providers, listings, services, requests, broadcasts, and platform analytics.
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="auth.full_name_label">Full Name *</label>
+        <input id="name" class="form-input" placeholder="Admin Full Name">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="auth.contact_label">Admin Phone / Username *</label>
+        <input id="username" class="form-input" placeholder="admin01 or 9876543210">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="auth.email_label">Email Address *</label>
+        <input id="email" type="email" class="form-input" placeholder="admin@agrotech.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="auth.password_label">Password *</label>
+        <input id="password" type="password" class="form-input" placeholder="Minimum 6 characters">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="auth.confirm_pw_label">Confirm Password *</label>
+        <input id="confirm" type="password" class="form-input" placeholder="Re-enter password">
+      </div>
+      <button class="btn btn-primary btn-full btn-lg" onclick="registerAdmin()" id="regBtn">
+        <span data-i18n="auth.verify_create_btn">Create Admin Account →</span>
+      </button>
+      <div class="links">
+        <a href="admin-login.html" data-i18n="auth.have_account">Already an admin? Login</a> · <a href="../index.html" data-i18n="common.back">Home</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="global-toast" class="toast"></div>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/global.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const holder = document.getElementById('langToggleHolder');
+      if (holder && typeof AgroI18n !== 'undefined') {
+        holder.innerHTML = AgroI18n.renderLanguageToggle();
+      }
+    });
+
+    async function registerAdmin() {
+      const n = document.getElementById('name').value.trim();
+      const u = document.getElementById('username').value.trim();
+      const e = document.getElementById('email').value.trim();
+      const p = document.getElementById('password').value;
+      const c = document.getElementById('confirm').value;
+      const btn = document.getElementById('regBtn');
+
+      if (!n || !u || !e || !p || !c) return showToast(AgroI18n.get('common.fill_required', 'Fill all required fields.'), 'error');
+      if (p.length < 6) return showToast('Password must be at least 6 characters.', 'error');
+      if (p !== c) return showToast('Passwords do not match.', 'error');
+
+      try {
+        btn.disabled = true;
+        await apiAdminRegister({ name: n, email: e, phone: u || '0000000000', password: p, location: 'Administration', role: 'admin' });
+        showToast('Admin account created successfully! Please login.', 'success');
+        setTimeout(() => location.href = 'admin-login.html', 900);
+      } catch (ex) {
+        btn.disabled = false;
+        showToast(ex.message, 'error');
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') registerAdmin();
+    });
+  </script>
+</body>
+</html>

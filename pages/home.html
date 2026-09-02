@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmer Dashboard – AgroTECH</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/home.css">
+  <style>
+    .farmer-dash-header {
+      background: linear-gradient(135deg, #0f3915 0%, #1b5e20 50%, #2e7d32 100%);
+      color: white;
+      padding: 2.5rem 1.5rem;
+      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+      margin-bottom: 2rem;
+    }
+    .farmer-dash-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .hero-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .hero-greeting {
+      font-size: 1rem;
+      color: #a7f3d0;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .hero-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin: 0;
+    }
+    .quick-actions-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+    .quick-chip {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      color: white;
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .quick-chip:hover {
+      background: white;
+      color: var(--green-900);
+      transform: translateY(-2px);
+    }
+    .alerts-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.5rem;
+      border: 1px solid var(--green-100);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 2rem;
+    }
+    .alerts-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 8px;
+      border-bottom: 1.5px solid var(--green-100);
+    }
+    .alerts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .alert-chip-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      background: var(--green-50);
+      border-left: 4px solid var(--green-600);
+      font-size: 0.875rem;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar (Role-Guarded for Farmer) -->
+  <nav class="navbar" id="navbar"></nav>
+
+  <!-- Farmer Hero Banner (Hero Page Theme) -->
+  <section class="farmer-dash-header">
+    <div class="farmer-dash-inner">
+      <div class="hero-top-row">
+        <div>
+          <div class="hero-greeting" id="greeting">Good morning! 🌤</div>
+          <h1 class="hero-title">
+            <span data-i18n="farmer.what_needed">What do you need</span> <span id="userName" style="color:#69f0ae">today</span>?
+          </h1>
+          <p class="hero-subtitle" data-i18n="landing.hero_desc">
+            On-demand tractor ploughing, precision harvesting, drone spraying & verified farm services.
+          </p>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <!-- English & Hindi Language Switcher for Farmer -->
+          <div class="lang-dual-toggle" id="farmerLangToggle">
+            <button type="button" class="lang-dual-btn lang-dual-en active" onclick="AgroI18n.setLanguage('en')">🇬🇧 English</button>
+            <button type="button" class="lang-dual-btn lang-dual-hi" onclick="AgroI18n.setLanguage('hi')">🇮🇳 हिंदी</button>
+          </div>
+
+          <div class="role-badge role-badge-farmer" style="font-size:0.85rem;padding:7px 18px;background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.35);backdrop-filter:blur(10px)">
+            🌾 <span data-i18n="role.farmer">Farmer Portal</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Search -->
+      <div class="home-search">
+        <div class="search-bar">
+          <span>🔍</span>
+          <input type="text" id="homeSearch" placeholder="Search tractors, harvesters, seeds, fertilizers, drip irrigation..." data-i18n-placeholder="farmer.search_placeholder">
+          <button class="btn btn-primary btn-sm" onclick="performSearch()" data-i18n="farmer.search_btn" style="border-radius:20px;padding:8px 20px;font-weight:700">
+            Search
+          </button>
+        </div>
+      </div>
+
+      <!-- Location & Nearest Controls -->
+      <div class="location-bar-wrap">
+        <div style="color:white;font-size:0.86rem;display:flex;align-items:center;gap:6px">
+          <span data-i18n="location.showing_near">Showing equipment & services near:</span>
+          <b id="farmerCurrentLoc" style="color:#fde047;font-size:0.92rem">Indore, MP</b>
+        </div>
+        <button type="button" class="location-chip-btn" onclick="openLocationPickerModal()">
+          <span>📍</span> <span data-i18n="location.change_location">Change Location</span> ▾
+        </button>
+        <button type="button" class="location-chip-btn" onclick="triggerGPSDetect()" id="gpsDetectBtn">
+          <span>🛰️</span> <span data-i18n="location.detect_gps">Detect Live GPS</span>
+        </button>
+        <button type="button" class="location-chip-btn" id="nearestSortToggle" onclick="toggleNearestSort()" style="background:rgba(16,185,129,0.3);border-color:#34d399">
+          <span>⚡</span> <span data-i18n="location.nearest_first">📍 Nearest First</span>
+        </button>
+      </div>
+
+      <!-- Quick Category Shortcuts -->
+      <div class="quick-actions-bar">
+        <a href="search.html?cat=machinery" class="quick-chip">
+          <span>🚜</span><span data-i18n="cat.machinery">Machinery</span>
+        </a>
+        <a href="search.html?cat=irrigation" class="quick-chip">
+          <span>💧</span><span data-i18n="cat.irrigation">Irrigation</span>
+        </a>
+        <a href="search.html?cat=fertilizer" class="quick-chip">
+          <span>🌿</span><span data-i18n="cat.fertilizer">Fertilizers</span>
+        </a>
+        <a href="search.html?cat=seeds" class="quick-chip">
+          <span>🌱</span><span data-i18n="cat.seeds">Seeds</span>
+        </a>
+        <a href="search.html?cat=transport" class="quick-chip">
+          <span>🚛</span><span data-i18n="cat.transport">Transport</span>
+        </a>
+        <a href="my_purchase.html" class="quick-chip" style="background:rgba(255,255,255,0.25)">
+          <span>📋</span><span data-i18n="nav.my_requests">My Requests</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Farmer Content -->
+  <main class="container" style="max-width:1200px;margin-bottom:3rem">
+
+    <!-- Stats Row (Farmer Specific) -->
+    <div class="stats-row">
+      <div class="home-stat-card">
+        <span class="home-stat-icon">🚜</span>
+        <div>
+          <div class="home-stat-num" id="statAvailableServices">0</div>
+          <div class="home-stat-label" data-i18n="farmer.stat_services">Available Services</div>
+        </div>
+      </div>
+      <div class="home-stat-card">
+        <span class="home-stat-icon">⏳</span>
+        <div>
+          <div class="home-stat-num" id="statPendingRequests">0</div>
+          <div class="home-stat-label" data-i18n="farmer.stat_pending">Pending Requests</div>
+        </div>
+      </div>
+      <div class="home-stat-card">
+        <span class="home-stat-icon">✅</span>
+        <div>
+          <div class="home-stat-num" id="statAcceptedRequests">0</div>
+          <div class="home-stat-label" data-i18n="farmer.stat_accepted">Accepted Requests</div>
+        </div>
+      </div>
+      <div class="home-stat-card">
+        <span class="home-stat-icon">🏁</span>
+        <div>
+          <div class="home-stat-num" id="statCompletedRequests">0</div>
+          <div class="home-stat-label" data-i18n="farmer.stat_completed">Completed Services</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Jobs & Work Done Confirmation Banner (Displayed when active bookings exist) -->
+    <div class="glass-panel-card" id="activeJobsCard" style="display:none;margin-bottom:2rem;background:linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);border-left:5px solid #10b981">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <h3 style="color:#065f46;font-size:1.15rem;display:flex;align-items:center;gap:8px;margin:0">
+          <span>⚡</span> <span>Active Agricultural Jobs</span>
+        </h3>
+        <a href="my_purchase.html" class="btn btn-secondary btn-sm" data-i18n="farmer.view_all">View All Requests →</a>
+      </div>
+      <div id="activeJobsList"></div>
+    </div>
+
+    <!-- Recent Alerts Card -->
+    <div class="alerts-card" id="recentAlertsCard">
+      <div class="alerts-card-header">
+        <h3 style="color:var(--green-900);font-size:1.05rem;display:flex;align-items:center;gap:8px">
+          🔔 <span data-i18n="farmer.recent_alerts">Recent Alerts & Updates</span>
+        </h3>
+        <a href="notifications.html" class="btn btn-secondary btn-sm" data-i18n="farmer.view_all">View All Alerts →</a>
+      </div>
+      <div class="alerts-list" id="recentAlertsList">
+        <div style="color:var(--gray-500);font-size:0.875rem" data-i18n="farmer.no_alerts">Loading alerts...</div>
+      </div>
+    </div>
+
+    <!-- Featured Services Grid -->
+    <section class="section">
+      <div class="section-top-bar">
+        <h2 data-i18n="farmer.featured_services">
+          🚜 Available Services & Equipment
+        </h2>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span id="nearestSortedBadge" style="display:none;font-size:0.8rem;background:#ecfdf5;color:#065f46;padding:4px 10px;border-radius:20px;border:1px solid #34d399;font-weight:700">
+            ⚡ Sorted by Distance (Nearest First)
+          </span>
+          <a href="search.html" class="btn btn-secondary btn-sm" data-i18n="farmer.view_all">Browse All Services →</a>
+        </div>
+      </div>
+      <div class="product-grid" id="productGrid">
+        <!-- JS rendered service cards with Send Request buttons -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Service Request Modal -->
+  <div class="agro-modal-backdrop" id="requestModal">
+    <div class="agro-modal-dialog">
+      <div class="agro-modal-header">
+        <h3 style="color:var(--green-900);font-size:1.2rem;margin:0" data-i18n="services.request_modal_title">
+          Send Service Request
+        </h3>
+        <button class="agro-modal-close" onclick="closeRequestModal()">✕</button>
+      </div>
+      <input type="hidden" id="reqServiceId">
+      <input type="hidden" id="reqProviderId">
+      <input type="hidden" id="reqUnitPrice">
+
+      <div style="background:var(--green-50);padding:12px;border-radius:12px;margin-bottom:14px;border:1px solid var(--green-200)">
+        <h4 id="reqModalServiceName" style="color:var(--green-900);margin-bottom:4px;font-size:1rem">Service</h4>
+        <div style="font-size:0.85rem;color:var(--gray-600);display:flex;justify-content:space-between">
+          <span id="reqModalProvider">Provider: Verified</span>
+          <span id="reqModalPrice" style="font-weight:700;color:var(--green-700)">₹0 / per acre</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="services.required_acres_qty">Quantity / Acres / Duration *</label>
+        <input type="number" id="reqQuantity" class="form-input" value="1" min="1" oninput="calculateEstimatedPrice()">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="services.request_date">Preferred Date / Time *</label>
+        <input type="text" id="reqDate" class="form-input" placeholder="e.g. Tomorrow 9:00 AM or 15 Oct">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="services.service_address">Farm / Delivery Address *</label>
+        <input type="text" id="reqAddress" class="form-input" placeholder="Village, Farm Sector, Landmark">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="services.request_notes">Notes / Special Instructions</label>
+        <textarea id="reqNotes" class="form-textarea" rows="2" placeholder="Mention specific requirements, soil type, or contact details..."></textarea>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:12px 14px;border-radius:10px;margin-bottom:14px">
+        <span style="font-weight:600;font-size:0.9rem" data-i18n="requests.est_cost">Estimated Total:</span>
+        <span id="reqTotalEstimate" style="font-family:'Sora',sans-serif;font-size:1.25rem;font-weight:800;color:var(--green-700)">₹0</span>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" style="flex:1" onclick="submitServiceRequest()" id="submitReqBtn">
+          <span data-i18n="services.submit_request">Send Request to Provider →</span>
+        </button>
+        <button class="btn btn-secondary" onclick="closeRequestModal()" data-i18n="common.cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location Picker Modal -->
+  <div class="agro-modal-backdrop" id="locationModal">
+    <div class="agro-modal-dialog" style="max-width:440px">
+      <div class="agro-modal-header">
+        <h3 style="color:var(--green-900);font-size:1.15rem;margin:0" data-i18n="location.select_city">
+          📍 Select District / City
+        </h3>
+        <button class="agro-modal-close" onclick="closeLocationPickerModal()">✕</button>
+      </div>
+      <p style="font-size:0.85rem;color:var(--gray-600);margin-bottom:14px">
+        Choose your agricultural region to discover nearest available tractors, harvesters, and rural service providers.
+      </p>
+
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label" data-i18n="location.select_city">Choose District / Hub</label>
+        <select id="districtSelect" class="form-input" style="font-size:0.95rem;font-weight:600">
+          <option value="Indore, MP">📍 Indore, MP (HQ Hub)</option>
+          <option value="Bhopal, MP">📍 Bhopal, MP</option>
+          <option value="Ujjain, MP">📍 Ujjain, MP</option>
+          <option value="Dewas, MP">📍 Dewas, MP</option>
+          <option value="Dhar, MP">📍 Dhar, MP</option>
+          <option value="Sehore, MP">📍 Sehore, MP</option>
+          <option value="Gwalior, MP">📍 Gwalior, MP</option>
+          <option value="Jabalpur, MP">📍 Jabalpur, MP</option>
+          <option value="Khargone, MP">📍 Khargone, MP</option>
+          <option value="Khandwa, MP">📍 Khandwa, MP</option>
+          <option value="Ratlam, MP">📍 Ratlam, MP</option>
+          <option value="Jaipur, RJ">📍 Jaipur, Rajasthan</option>
+          <option value="Kota, RJ">📍 Kota, Rajasthan</option>
+          <option value="Nagpur, MH">📍 Nagpur, Maharashtra</option>
+        </select>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeLocationPickerModal()" data-i18n="common.cancel">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSelectedLocation()">
+          <span data-i18n="common.save">Apply Location 📍</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>© 2025 AgroTECH • Built with 💚 for India's Farmers • Helpline: +91 11 1234 5678</p>
+  </footer>
+
+  <div id="global-toast" class="toast"></div>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/global.js"></script>
+  <script src="../js/home.js"></script>
+</body>
+</html>

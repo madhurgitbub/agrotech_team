@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Not Found – AgroTECH</title>
+  <link rel="stylesheet" href="css/global.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-main);
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .notfound-illustration {
+      font-size: 6rem;
+      margin-bottom: 1rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-14px); }
+    }
+
+    h1 {
+      font-size: clamp(3rem, 8vw, 6rem);
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      color: var(--green-700);
+      line-height: 1;
+      margin-bottom: 0.25rem;
+    }
+
+    h2 { font-size: 1.4rem; color: var(--gray-700); margin-bottom: 0.75rem; }
+    p  { color: var(--gray-400); max-width: 380px; font-size: 0.95rem; margin-bottom: 2rem; }
+
+    .notfound-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  </style>
+</head>
+<body>
+  <div class="notfound-illustration">🌱</div>
+  <h1>404</h1>
+  <h2>Page Not Found</h2>
+  <p>Looks like this field is empty! The page you're looking for doesn't exist or has been moved.</p>
+  <div class="notfound-actions">
+    <a href="index.html" class="btn btn-primary btn-lg">🏠 Go Home</a>
+    <a href="pages/search.html" class="btn btn-secondary btn-lg">🔍 Browse Services</a>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/global.js"></script>
+  <script>
+    // If logged in, adjust links
+    if (AgroData.isLoggedIn()) {
+      document.querySelector('a[href="index.html"]').href = 'pages/home.html';
+    }
+  </script>
+</body>
+</html>

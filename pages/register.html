@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register – AgroTECH</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a2e0d 0%, #1b5e20 50%, #2e7d32 100%);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .auth-wrapper {
+      width: 100%;
+      max-width: 520px;
+      padding-bottom: 2rem;
+    }
+
+    .auth-brand {
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .auth-brand h1 { font-size: 1.6rem; color: white; }
+    .auth-brand h1 span { color: #69f0ae; }
+    .auth-brand p { color: rgba(255,255,255,0.7); font-size: 0.85rem; margin-top: 4px; }
+
+    .auth-card {
+      background: rgba(255,255,255,0.98);
+      border-radius: var(--radius-xl);
+      padding: 2.25rem;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+    }
+
+    .card-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .role-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    .role-option {
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .role-option.selected {
+      border-color: var(--green-600);
+      background: var(--green-50);
+    }
+
+    .role-option .role-icon { font-size: 1.8rem; margin-bottom: 4px; }
+    .role-option .role-title { font-weight: 700; font-size: 0.9rem; color: var(--gray-800); }
+    .role-option .role-desc { font-size: 0.72rem; color: var(--gray-500); margin-top: 2px; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media(max-width:480px) {
+      .form-row { grid-template-columns: 1fr; }
+      .role-selector { grid-template-columns: 1fr; }
+    }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.875rem;
+      color: var(--gray-600);
+    }
+    .auth-footer a { color: var(--green-700); font-weight: 700; text-decoration: none; }
+    .auth-footer a:hover { text-decoration: underline; }
+
+    .step-indicator {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 1.25rem;
+    }
+    .step-dot {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--gray-200);
+      transition: var(--transition);
+    }
+    .step-dot.active { background: var(--green-500); }
+    .step-dot.done { background: var(--green-700); }
+  </style>
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-brand">
+      <h1>🌱 Agro<span>TECH</span></h1>
+      <p data-i18n="app.tagline">Smart Agricultural Platform</p>
+    </div>
+
+    <div class="auth-card">
+      <div class="card-top-bar">
+        <div>
+          <h2 style="font-size:1.3rem;color:var(--green-900);margin:0" data-i18n="auth.register_title">Create Account</h2>
+          <p style="color:var(--gray-500);font-size:0.82rem;margin-top:2px" data-i18n="auth.register_subtitle">Choose your role to get started</p>
+        </div>
+        <div id="langToggleHolder"></div>
+      </div>
+
+      <!-- Role Selector -->
+      <label class="form-label" style="margin-bottom:8px" data-i18n="auth.select_role">Select Your Role *</label>
+      <div class="role-selector">
+        <div class="role-option selected" id="roleFarmer" onclick="selectRole('farmer')">
+          <div class="role-icon">🌾</div>
+          <div class="role-title" data-i18n="role.farmer">Farmer</div>
+          <div class="role-desc" data-i18n="auth.role_farmer_desc">Rent machinery & book services</div>
+        </div>
+        <div class="role-option" id="roleProvider" onclick="selectRole('provider')">
+          <div class="role-icon">🚜</div>
+          <div class="role-title" data-i18n="role.provider">Service Provider</div>
+          <div class="role-desc" data-i18n="auth.role_provider_desc">Offer equipment & machinery</div>
+        </div>
+      </div>
+
+      <div class="step-indicator">
+        <div class="step-dot active" id="dot1"></div>
+        <div class="step-dot" id="dot2"></div>
+        <div class="step-dot" id="dot3"></div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" data-i18n="auth.full_name_label">Full Name *</label>
+          <input type="text" id="name" class="form-input" placeholder="e.g. Ramesh Patel" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="auth.contact_label">Contact Number (10 digits) *</label>
+          <input type="tel" id="contact" class="form-input" placeholder="9876543210" maxlength="10" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="auth.email_label">Email Address *</label>
+        <input type="email" id="email" class="form-input" placeholder="you@example.com" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" data-i18n="auth.password_label">Password *</label>
+          <input type="password" id="password" class="form-input" placeholder="Min 6 characters" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="auth.confirm_pw_label">Confirm Password *</label>
+          <input type="password" id="confirmPw" class="form-input" placeholder="Re-enter password" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="auth.address_label">Village / Town / District</label>
+        <input type="text" id="address" class="form-input" placeholder="Village / Town, District">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" data-i18n="auth.state_label">State</label>
+          <select id="state" class="form-select">
+            <option value="">Select state</option>
+            <option>Madhya Pradesh</option>
+            <option>Uttar Pradesh</option>
+            <option>Maharashtra</option>
+            <option>Rajasthan</option>
+            <option>Punjab</option>
+            <option>Haryana</option>
+            <option>Gujarat</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="auth.pincode_label">Pincode</label>
+          <input type="text" id="pincode" class="form-input" placeholder="452001" maxlength="6">
+        </div>
+      </div>
+
+      <div class="form-group" id="otpGroup" style="display:none">
+        <label class="form-label" data-i18n="auth.otp_label">Email Verification OTP *</label>
+        <input type="text" id="otp" class="form-input" placeholder="Enter 6-digit OTP" maxlength="6" inputmode="numeric">
+      </div>
+
+      <button class="btn btn-primary btn-full btn-lg" onclick="handleRegister()" style="margin-top:4px" id="regBtn">
+        <span id="registerBtnText" data-i18n="auth.send_otp_btn">Send Verification OTP →</span>
+      </button>
+
+      <div class="auth-footer">
+        <span data-i18n="auth.have_account">Already have an account?</span> 
+        <a href="login.html" data-i18n="nav.login">Login here</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="global-toast" class="toast"></div>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/global.js"></script>
+  <script>
+    let selectedRole = 'farmer';
+    let pendingRegistration = null;
+    let otpRequested = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const holder = document.getElementById('langToggleHolder');
+      if (holder && typeof AgroI18n !== 'undefined') {
+        holder.innerHTML = AgroI18n.renderLanguageToggle();
+      }
+
+      const inputs = ['name','contact','email','password'];
+      inputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', updateStepDots);
+      });
+    });
+
+    function selectRole(role) {
+      selectedRole = role;
+      document.getElementById('roleFarmer').classList.toggle('selected', role === 'farmer');
+      document.getElementById('roleProvider').classList.toggle('selected', role === 'provider');
+    }
+
+    function updateStepDots() {
+      const name = document.getElementById('name').value.trim();
+      const contact = document.getElementById('contact').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const pw = document.getElementById('password').value;
+
+      document.getElementById('dot1').className = 'step-dot ' + (name && contact ? 'done' : 'active');
+      document.getElementById('dot2').className = 'step-dot ' + (email ? (name && contact ? 'done' : 'active') : (name && contact ? 'active' : ''));
+      document.getElementById('dot3').className = 'step-dot ' + (pw ? 'active' : '');
+    }
+
+    async function handleRegister() {
+      const name = document.getElementById('name').value.trim();
+      const contact = document.getElementById('contact').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPw = document.getElementById('confirmPw').value;
+      const state = document.getElementById('state').value;
+      const address = document.getElementById('address').value.trim();
+      const otp = document.getElementById('otp').value.trim();
+      const btn = document.getElementById('regBtn');
+
+      if (!name || !contact || !email || !password) {
+        return showToast(AgroI18n.get('common.fill_required', 'Please fill in all required fields.'), 'error');
+      }
+      if (!/^\d{10}$/.test(contact)) {
+        return showToast('Contact must be a valid 10-digit number.', 'error');
+      }
+      if (!/\S+@\S+\.\S+/.test(email)) {
+        return showToast('Please enter a valid email address.', 'error');
+      }
+      if (password.length < 6) {
+        return showToast('Password must be at least 6 characters.', 'error');
+      }
+      if (password !== confirmPw) {
+        return showToast('Passwords do not match!', 'error');
+      }
+
+      const payload = {
+        name,
+        email,
+        phone: contact,
+        password,
+        location: (address || '') + (state ? ', ' + state : ''),
+        role: selectedRole
+      };
+
+      try {
+        if (!otpRequested) {
+          btn.disabled = true;
+          const res = await apiRegister(payload);
+          btn.disabled = false;
+          pendingRegistration = payload;
+          otpRequested = true;
+          document.getElementById('otpGroup').style.display = 'block';
+          if (res && res.debug_otp) {
+            document.getElementById('otp').value = res.debug_otp;
+          }
+          document.getElementById('registerBtnText').textContent = AgroI18n.get('auth.verify_create_btn', 'Verify OTP & Create Account →');
+          showToast(res?.message || 'OTP sent! Check your email to verify.', 'success');
+          document.getElementById('otp').focus();
+          return;
+        }
+
+        if (!pendingRegistration || pendingRegistration.email !== email) {
+          otpRequested = false;
+          pendingRegistration = null;
+          document.getElementById('otpGroup').style.display = 'none';
+          document.getElementById('registerBtnText').textContent = AgroI18n.get('auth.send_otp_btn', 'Send Verification OTP →');
+          showToast('Registration details changed. Please request OTP again.', 'info');
+          return;
+        }
+
+        if (!/^\d{4,10}$/.test(otp)) {
+          return showToast('Please enter a valid OTP.', 'error');
+        }
+
+        btn.disabled = true;
+        const res = await apiVerifyRegisterOtp(email, otp);
+        showToast('Account verified and created successfully! Welcome 🌱', 'success');
+
+        setTimeout(() => {
+          if (selectedRole === 'provider') {
+            window.location.href = 'provider-dashboard.html';
+          } else {
+            window.location.href = 'home.html';
+          }
+        }, 800);
+      } catch (e) {
+        btn.disabled = false;
+        showToast(e.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

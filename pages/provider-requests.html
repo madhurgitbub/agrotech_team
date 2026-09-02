@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Requests – AgroTECH Provider</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/home.css">
+  <style>
+    .requests-layout {
+      max-width: 1050px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 3rem;
+    }
+
+    .req-card {
+      background: white;
+      border-radius: 20px;
+      padding: 1.6rem 1.75rem;
+      border: 1px solid rgba(16, 185, 129, 0.18);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+      margin-bottom: 1.5rem;
+      transition: all 0.25s ease;
+    }
+
+    .req-card:hover {
+      box-shadow: 0 12px 32px rgba(16, 185, 129, 0.12);
+      border-color: #34d399;
+    }
+
+    .req-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .req-service-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .req-farmer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      background: #f0fdf4;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      font-size: 0.88rem;
+      border: 1px solid #bbf7d0;
+    }
+
+    .req-farmer-field strong {
+      color: #065f46;
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+
+    .req-bottom-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar" id="navbar"></nav>
+
+  <!-- Hero Header -->
+  <div class="page-header">
+    <div class="farmer-dash-inner">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:1rem">
+        <div class="breadcrumb" style="padding:0;color:rgba(255,255,255,0.7)">
+          <a href="provider-dashboard.html" style="color:rgba(255,255,255,0.7)" data-i18n="nav.provider_dashboard">Dashboard</a>
+          <span>/</span>
+          <span style="color:white" data-i18n="prov_req.title">Requests</span>
+        </div>
+
+        <div class="lang-dual-toggle">
+          <button type="button" class="lang-dual-btn lang-dual-en active" onclick="AgroI18n.setLanguage('en')">🇬🇧 English</button>
+          <button type="button" class="lang-dual-btn lang-dual-hi" onclick="AgroI18n.setLanguage('hi')">🇮🇳 हिंदी</button>
+        </div>
+      </div>
+
+      <h1 style="font-size:clamp(1.6rem, 3vw, 2.2rem);color:white;font-weight:800;margin-bottom:4px" data-i18n="prov_req.title">
+        📥 Customer Service Requests
+      </h1>
+      <p style="color:rgba(255,255,255,0.85);font-size:0.92rem" data-i18n="prov_req.subtitle">
+        Review incoming bookings from local farmers, accept or reject jobs, and confirm work completion.
+      </p>
+    </div>
+  </div>
+
+  <div class="requests-layout">
+
+    <!-- Filter Bar -->
+    <div class="filter-tabs" style="margin-bottom:1.5rem">
+      <button class="filter-tab active" onclick="filterRequests('all', this)" data-i18n="requests.tab_all">All Requests</button>
+      <button class="filter-tab" onclick="filterRequests('pending', this)" data-i18n="requests.tab_pending">⏳ Pending</button>
+      <button class="filter-tab" onclick="filterRequests('accepted', this)" data-i18n="requests.tab_accepted">✅ Accepted</button>
+      <button class="filter-tab" onclick="filterRequests('completed', this)" data-i18n="requests.tab_completed">🏁 Completed</button>
+      <button class="filter-tab" onclick="filterRequests('rejected', this)" data-i18n="requests.tab_rejected">❌ Rejected</button>
+    </div>
+
+    <!-- Requests List -->
+    <div id="requestsList"></div>
+
+  </div>
+
+  <footer class="footer">
+    <p>© 2025 AgroTECH • Provider Partner Portal • Helpline: +91 11 1234 5678</p>
+  </footer>
+
+  <div id="global-toast" class="toast"></div>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/global.js"></script>
+  <script>
+    let allRequests = [];
+    let currentFilter = 'all';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!requireRole(['provider', 'seller'])) return;
+      renderNavbar('requests');
+      loadRequests();
+    });
+
+    window.addEventListener('agroLanguageChanged', () => {
+      renderRequests(getFilteredRequests());
+    });
+
+    async function loadRequests() {
+      try {
+        const res = await apiGetProviderRequests();
+        allRequests = res.requests || [];
+        renderRequests(getFilteredRequests());
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function getFilteredRequests() {
+      if (currentFilter === 'all') return allRequests;
+      return allRequests.filter(r => r.status === currentFilter || (currentFilter === 'accepted' && r.status === 'confirmed'));
+    }
+
+    function filterRequests(status, btn) {
+      currentFilter = status;
+      document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderRequests(getFilteredRequests());
+    }
+
+    function renderRequests(list) {
+      const el = document.getElementById('requestsList');
+      if (list.length === 0) {
+        el.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📥</div>
+            <h3 data-i18n="prov_req.empty_title">${AgroI18n.get('prov_req.empty_title', 'No Requests Found')}</h3>
+            <p data-i18n="prov_req.empty_desc">${AgroI18n.get('prov_req.empty_desc', 'When farmers book your services, their requests will appear here.')}</p>
+          </div>`;
+        return;
+      }
+
+      const isHi = typeof AgroI18n !== 'undefined' && AgroI18n.currentLang === 'hi';
+
+      el.innerHTML = list.map(r => {
+        const isPending = r.status === 'pending';
+        const isAccepted = r.status === 'accepted' || r.status === 'confirmed';
+        const isCompleted = r.status === 'completed';
+
+        return `
+          <div class="req-card animate-fade-up">
+            <div class="req-card-top">
+              <div>
+                <div class="req-service-title">${r.service_name}</div>
+                <div style="font-size:0.82rem;color:#64748b;margin-top:4px">
+                  <span>🔖 ID: #${r.request_id || r.id}</span> · 
+                  <span>📅 Requested: ${formatDate(r.created_at)}</span> ·
+                  <span>⏱ Preferred: ${r.preferred_date || 'ASAP'}</span>
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-family:'Sora',sans-serif;font-size:1.35rem;font-weight:800;color:#047857">${formatPrice(r.price)}</div>
+                <span class="status-pill status-${r.status}" style="margin-top:4px">${r.status.toUpperCase()}</span>
+              </div>
+            </div>
+
+            <div class="req-farmer-grid">
+              <div class="req-farmer-field">
+                <strong data-i18n="prov_req.farmer_name">Farmer Name</strong>
+                <span>${r.farmer_name || r.farmer?.name || 'Farmer'}</span>
+              </div>
+              <div class="req-farmer-field">
+                <strong data-i18n="prov_req.farmer_contact">Farmer Contact</strong>
+                <span>📞 ${r.farmer_phone || r.farmer?.phone || '—'}</span>
+              </div>
+              <div class="req-farmer-field">
+                <strong data-i18n="prov_req.location">Farm / Delivery Location</strong>
+                <span>📍 ${r.address || r.location || 'Local Farm Area'}</span>
+              </div>
+              <div class="req-farmer-field">
+                <strong data-i18n="services.required_acres_qty">Quantity / Units</strong>
+                <span>${r.quantity || 1}</span>
+              </div>
+            </div>
+
+            ${r.notes ? `
+              <div style="font-size:0.85rem;color:#334155;background:#f8fafc;padding:10px 14px;border-radius:10px;margin-bottom:14px;border:1px solid #e2e8f0">
+                <b>📝 Farmer Notes:</b> ${r.notes}
+              </div>
+            ` : ''}
+
+            <div class="req-bottom-actions">
+              <div style="font-size:0.84rem;color:#64748b">
+                Payment: <b>${(r.payment_method || 'COD').toUpperCase()}</b> · Status: <b>${(r.payment_status || 'pending').toUpperCase()}</b>
+              </div>
+
+              <div class="btn-group">
+                ${isPending ? `
+                  <button class="btn btn-primary btn-sm" style="border-radius:10px;font-weight:700" onclick="updateStatus('${r.request_id || r.id}', 'accepted')">
+                    ${isHi ? '✅ अनुरोध स्वीकार करें' : '✅ Accept Request'}
+                  </button>
+                  <button class="btn btn-danger btn-sm" style="border-radius:10px;font-weight:700" onclick="updateStatus('${r.request_id || r.id}', 'rejected')">
+                    ${isHi ? '❌ अस्वीकार करें' : '❌ Reject'}
+                  </button>
+                ` : ''}
+
+                ${isAccepted ? `
+                  <button class="btn-work-done" onclick="AgroWorkDone.openModal('${r.request_id || r.id}', '${r.service_name}', 'provider')">
+                    <span>🏁</span> <span>${isHi ? 'काम पूरा हुआ चिह्नित करें' : 'Mark Work Done'}</span>
+                  </button>
+                  <button class="btn btn-danger btn-sm" style="border-radius:10px" onclick="updateStatus('${r.request_id || r.id}', 'cancelled')">
+                    🚫 Cancel
+                  </button>
+                ` : ''}
+
+                ${isCompleted ? `
+                  <span style="font-size:0.85rem;color:#15803d;font-weight:700;display:flex;align-items:center;gap:4px">
+                    ✨ ${isHi ? 'कार्य सफलतापूर्वक संपन्न' : 'Service Completed & Verified'}
+                  </span>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function updateStatus(id, status) {
+      try {
+        await apiUpdateRequestStatus(id, status);
+        const isHi = typeof AgroI18n !== 'undefined' && AgroI18n.currentLang === 'hi';
+        const msg = status === 'accepted' ? (isHi ? 'अनुरोध स्वीकार कर लिया गया! किसान को सूचित कर दिया गया है।' : 'Request accepted! Farmer notified.') :
+                    status === 'rejected' ? (isHi ? 'अनुरोध अस्वीकार कर दिया गया।' : 'Request rejected.') :
+                    status === 'completed' ? (isHi ? 'काम पूरा चिह्नित हो गया! धन्यवाद।' : 'Job marked as completed!') : 'Status updated.';
+        showToast(msg, 'success');
+        await loadRequests();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

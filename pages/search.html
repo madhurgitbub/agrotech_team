@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find Services & Machinery – AgroTECH</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/home.css">
+  <style>
+    .search-hero-banner {
+      background: linear-gradient(140deg, #021406 0%, #06260e 30%, #0d3b17 70%, #155222 100%);
+      color: white;
+      padding: 2.75rem 1.75rem 2rem;
+      border-radius: 0 0 28px 28px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 2rem;
+      box-shadow: 0 12px 40px rgba(2, 20, 6, 0.3);
+    }
+    .search-hero-banner::before {
+      content: '';
+      position: absolute;
+      top: -50px; right: -50px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(74, 222, 128, 0.2) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .search-hero-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+    .dist-filter-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .dist-pill {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.12);
+      color: white;
+      transition: all 0.2s;
+    }
+    .dist-pill:hover {
+      background: white;
+      color: #06260e;
+    }
+    .dist-pill.active {
+      background: #10b981;
+      border-color: #34d399;
+      color: white;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);
+    }
+    .results-meta-bar {
+      padding: 1rem 0 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar" id="navbar"></nav>
+
+  <!-- Hero Header for Search -->
+  <div class="search-hero-banner">
+    <div class="search-hero-inner">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:1.25rem">
+        <div class="breadcrumb" style="padding:0;color:rgba(255,255,255,0.7)">
+          <a href="home.html" style="color:rgba(255,255,255,0.7)" data-i18n="nav.home">Dashboard</a>
+          <span>/</span>
+          <span style="color:white" data-i18n="nav.find_services">Find Services</span>
+        </div>
+
+        <!-- Language toggle for Farmer -->
+        <div class="lang-dual-toggle" id="searchLangToggle">
+          <button type="button" class="lang-dual-btn lang-dual-en active" onclick="AgroI18n.setLanguage('en')">🇬🇧 English</button>
+          <button type="button" class="lang-dual-btn lang-dual-hi" onclick="AgroI18n.setLanguage('hi')">🇮🇳 हिंदी</button>
+        </div>
+      </div>
+
+      <h1 style="font-size:clamp(1.5rem, 3vw, 2.2rem);color:white;font-weight:800;margin-bottom:4px" data-i18n="services.find_title">
+        🔍 Find Agricultural Services & Machinery
+      </h1>
+      <p style="color:rgba(255,255,255,0.85);font-size:0.9rem;margin-bottom:1.25rem" data-i18n="services.find_subtitle">
+        Browse verified providers, tractors, harvesters, seeds, fertilizers, and drip irrigation nearest to your farm.
+      </p>
+
+      <!-- Main Search Controls -->
+      <div class="search-controls">
+        <div class="search-bar" style="flex:1;min-width:260px">
+          <span>🔍</span>
+          <input type="text" id="searchInput" placeholder="Search machinery, seeds, fertilizers, irrigation..." data-i18n-placeholder="farmer.search_placeholder" oninput="debounceSearch()">
+        </div>
+        <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+          <option value="nearest" data-i18n="location.nearest_first">📍 Nearest First (Default)</option>
+          <option value="price-asc" data-i18n="services.sort_low_high">Price: Low to High</option>
+          <option value="price-desc" data-i18n="services.sort_high_low">Price: High to Low</option>
+          <option value="rating" data-i18n="services.sort_rating">Top Rated</option>
+        </select>
+      </div>
+
+      <!-- Location & Distance Selection Bar -->
+      <div class="location-bar-wrap" style="margin-top:14px">
+        <div style="color:white;font-size:0.86rem;display:flex;align-items:center;gap:6px">
+          <span data-i18n="location.showing_near">Showing equipment & services near:</span>
+          <b id="searchCurrentLoc" style="color:#fde047;font-size:0.92rem">Indore, MP</b>
+        </div>
+        <button type="button" class="location-chip-btn" onclick="openLocationPickerModal()">
+          <span>📍</span> <span data-i18n="location.change_location">Change Location</span> ▾
+        </button>
+        <button type="button" class="location-chip-btn" onclick="triggerGPSDetect()" id="gpsDetectBtn">
+          <span>🛰️</span> <span data-i18n="location.detect_gps">Detect Live GPS</span>
+        </button>
+      </div>
+
+      <!-- Distance Range Filter Pills -->
+      <div class="dist-filter-pills">
+        <span style="font-size:0.8rem;color:rgba(255,255,255,0.7);display:flex;align-items:center;margin-right:4px">
+          📏 <span data-i18n="location.filter_distance">Distance</span>:
+        </span>
+        <button type="button" class="dist-pill active" onclick="setDistanceFilter('all', this)" data-i18n="location.all_distances">All Distances</button>
+        <button type="button" class="dist-pill" onclick="setDistanceFilter(10, this)" data-i18n="location.within_10km">Within 10 km</button>
+        <button type="button" class="dist-pill" onclick="setDistanceFilter(25, this)" data-i18n="location.within_25km">Within 25 km</button>
+        <button type="button" class="dist-pill" onclick="setDistanceFilter(50, this)" data-i18n="location.within_50km">Within 50 km</button>
+      </div>
+
+      <!-- Categories Filter Tabs -->
+      <div class="filter-tabs" id="filterTabs">
+        <!-- JS rendered category tabs -->
+      </div>
+    </div>
+  </div>
+
+  <main class="container section" style="max-width:1200px;margin-bottom:3rem">
+    <div class="results-meta-bar">
+      <span id="resultsMeta">Loading services...</span>
+      <span id="distanceMeta" style="font-weight:600;color:#047857"></span>
+    </div>
+
+    <div class="product-grid" id="productGrid"></div>
+
+    <div id="noResults" style="display:none">
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3 data-i18n="requests.empty_title">No services found</h3>
+        <p data-i18n="requests.empty_desc">Try adjusting your distance filter, category, or search term.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Service Request Modal -->
+  <div class="agro-modal-backdrop" id="requestModal">
+    <div class="agro-modal-dialog">
+      <div class="agro-modal-header">
+        <h3 style="color:var(--green-900);font-size:1.2rem;margin:0" data-i18n="services.request_modal_title">
+          Send Service Request
+        </h3>
+        <button class="agro-modal-close" onclick="closeRequestModal()">✕</button>
+      </div>
+      <input type="hidden" id="reqServiceId">
+      <input type="hidden" id="reqProviderId">
+      <input type="hidden" id="reqUnitPrice">
+
+      <div style="background:var(--green-50);padding:12px;border-radius:12px;margin-bottom:14px;border:1px solid var(--green-200)">
+        <h4 id="reqModalServiceName" style="color:var(--green-900);margin-bottom:4px;font-size:1rem">Service</h4>
+        <div style="font-size:0.85rem;color:var(--gray-600);display:flex;justify-content:space-between">
+          <span id="reqModalProvider">Provider: Verified Partner</span>
+          <span id="reqModalPrice" style="font-weight:700;color:var(--green-700)">₹0</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="services.required_acres_qty">Quantity / Acres / Duration *</label>
+        <input type="number" id="reqQuantity" class="form-input" value="1" min="1" oninput="calculateEstimatedPrice()">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="services.request_date">Preferred Date / Time *</label>
+        <input type="text" id="reqDate" class="form-input" placeholder="e.g. Tomorrow 9:00 AM or 15 Oct">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="services.service_address">Farm / Delivery Address *</label>
+        <input type="text" id="reqAddress" class="form-input" placeholder="Village, Farm Sector, Landmark">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" data-i18n="services.request_notes">Notes / Special Instructions</label>
+        <textarea id="reqNotes" class="form-textarea" rows="2" placeholder="Mention specific requirements, soil type, or instructions..."></textarea>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:12px 14px;border-radius:10px;margin-bottom:14px">
+        <span style="font-weight:600;font-size:0.9rem" data-i18n="requests.est_cost">Estimated Total:</span>
+        <span id="reqTotalEstimate" style="font-family:'Sora',sans-serif;font-size:1.25rem;font-weight:800;color:var(--green-700)">₹0</span>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" style="flex:1" onclick="submitServiceRequest()" id="submitReqBtn">
+          <span data-i18n="services.submit_request">Send Request to Provider →</span>
+        </button>
+        <button class="btn btn-secondary" onclick="closeRequestModal()" data-i18n="common.cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location Picker Modal -->
+  <div class="agro-modal-backdrop" id="locationModal">
+    <div class="agro-modal-dialog" style="max-width:440px">
+      <div class="agro-modal-header">
+        <h3 style="color:var(--green-900);font-size:1.15rem;margin:0" data-i18n="location.select_city">
+          📍 Select District / City
+        </h3>
+        <button class="agro-modal-close" onclick="closeLocationPickerModal()">✕</button>
+      </div>
+      <p style="font-size:0.85rem;color:var(--gray-600);margin-bottom:14px">
+        Choose your agricultural region to discover nearest available machinery and service providers.
+      </p>
+
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label" data-i18n="location.select_city">Choose District / Hub</label>
+        <select id="districtSelect" class="form-input" style="font-size:0.95rem;font-weight:600">
+          <option value="Indore, MP">📍 Indore, MP (HQ Hub)</option>
+          <option value="Bhopal, MP">📍 Bhopal, MP</option>
+          <option value="Ujjain, MP">📍 Ujjain, MP</option>
+          <option value="Dewas, MP">📍 Dewas, MP</option>
+          <option value="Dhar, MP">📍 Dhar, MP</option>
+          <option value="Sehore, MP">📍 Sehore, MP</option>
+          <option value="Gwalior, MP">📍 Gwalior, MP</option>
+          <option value="Jabalpur, MP">📍 Jabalpur, MP</option>
+          <option value="Khargone, MP">📍 Khargone, MP</option>
+          <option value="Khandwa, MP">📍 Khandwa, MP</option>
+          <option value="Ratlam, MP">📍 Ratlam, MP</option>
+          <option value="Jaipur, RJ">📍 Jaipur, Rajasthan</option>
+          <option value="Kota, RJ">📍 Kota, Rajasthan</option>
+          <option value="Nagpur, MH">📍 Nagpur, Maharashtra</option>
+        </select>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeLocationPickerModal()" data-i18n="common.cancel">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSelectedLocation()">
+          <span data-i18n="common.save">Apply Location 📍</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>© 2025 AgroTECH • Built with 💚 for India's Farmers</p>
+  </footer>
+
+  <div id="global-toast" class="toast"></div>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/global.js"></script>
+  <script>
+    let allServices = [];
+    let activeCategory = 'All';
+    let searchQuery = '';
+    let selectedServiceForModal = null;
+    let maxDistanceFilter = 'all';
+
+    const categories = ['All', 'machinery', 'irrigation', 'fertilizer', 'seeds', 'transport'];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!requireRole('farmer')) return;
+      renderNavbar('search');
+      loadFarmerLocation();
+
+      const params = new URLSearchParams(window.location.search);
+      searchQuery = params.get('q') || '';
+      activeCategory = params.get('cat') ? params.get('cat') : 'All';
+
+      document.getElementById('searchInput').value = searchQuery;
+      renderCategories();
+      await loadServices();
+    });
+
+    window.addEventListener('agroLanguageChanged', () => {
+      renderCategories();
+      loadFarmerLocation();
+      applyFilters();
+    });
+
+    window.addEventListener('agroLocationChanged', () => {
+      loadFarmerLocation();
+      applyFilters();
+    });
+
+    function loadFarmerLocation() {
+      if (typeof AgroLocation === 'undefined') return;
+      const loc = AgroLocation.getCurrentLocation();
+      const locEl = document.getElementById('searchCurrentLoc');
+      if (locEl) locEl.textContent = loc.name || 'Indore, MP';
+      const sel = document.getElementById('districtSelect');
+      if (sel && loc.name) sel.value = loc.name;
+    }
+
+    async function loadServices() {
+      try {
+        const res = await apiGetServices();
+        allServices = res.services || [];
+        applyFilters();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    function renderCategories() {
+      const tabs = document.getElementById('filterTabs');
+      tabs.innerHTML = categories.map(cat => {
+        const icon = getCategoryIcon(cat);
+        const name = cat === 'All' ? AgroI18n.get('cat.all', 'All') : AgroI18n.get(`cat.${cat}`, cat.charAt(0).toUpperCase() + cat.slice(1));
+        return `
+          <button class="filter-tab ${cat === activeCategory ? 'active' : ''}" onclick="setCategory('${cat}')">
+            ${icon} ${name}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function setCategory(cat) {
+      activeCategory = cat;
+      renderCategories();
+      applyFilters();
+    }
+
+    function setDistanceFilter(maxKm, btn) {
+      maxDistanceFilter = maxKm;
+      document.querySelectorAll('.dist-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilters();
+    }
+
+    const debounceSearch = debounce(() => {
+      searchQuery = document.getElementById('searchInput').value.trim();
+      applyFilters();
+    }, 250);
+
+    function applyFilters() {
+      let filtered = [...allServices];
+
+      // Category filter
+      if (activeCategory && activeCategory !== 'All') {
+        filtered = filtered.filter(s => (s.category || '').toLowerCase() === activeCategory.toLowerCase());
+      }
+
+      // Search query filter
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter(s =>
+          (s.name || '').toLowerCase().includes(q) ||
+          (s.description || '').toLowerCase().includes(q) ||
+          (s.location || '').toLowerCase().includes(q)
+        );
+      }
+
+      // Calculate distance for all filtered services
+      if (typeof AgroLocation !== 'undefined') {
+        filtered.forEach(s => {
+          s._distanceKm = AgroLocation.getDistanceForService(s);
+        });
+
+        // Distance range filter
+        if (maxDistanceFilter !== 'all') {
+          const max = Number(maxDistanceFilter);
+          filtered = filtered.filter(s => (s._distanceKm || 0) <= max);
+        }
+      }
+
+      // Sort
+      const sort = document.getElementById('sortSelect').value;
+      if (sort === 'nearest' && typeof AgroLocation !== 'undefined') {
+        filtered.sort((a, b) => (a._distanceKm || 0) - (b._distanceKm || 0));
+      } else if (sort === 'price-asc') {
+        filtered.sort((a, b) => a.price - b.price);
+      } else if (sort === 'price-desc') {
+        filtered.sort((a, b) => b.price - a.price);
+      } else if (sort === 'rating') {
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      }
+
+      renderResults(filtered);
+    }
+
+    function renderResults(list) {
+      const grid = document.getElementById('productGrid');
+      const noResults = document.getElementById('noResults');
+      const meta = document.getElementById('resultsMeta');
+
+      meta.innerHTML = AgroI18n.t('services.results_count', { count: list.length }, `Showing <strong>${list.length}</strong> available services`);
+
+      if (list.length === 0) {
+        grid.style.display = 'none';
+        noResults.style.display = 'block';
+        return;
+      }
+
+      grid.style.display = 'grid';
+      noResults.style.display = 'none';
+
+      grid.innerHTML = list.map((s, i) => {
+        const distKm = s._distanceKm !== undefined ? s._distanceKm : (typeof AgroLocation !== 'undefined' ? AgroLocation.getDistanceForService(s) : null);
+        const distBadge = distKm !== null ? AgroLocation.renderDistanceBadge(distKm) : '';
+
+        return `
+          <div class="product-card animate-fade-up" style="animation-delay:${i * 0.04}s">
+            <img class="product-card-img" src="${s.image}" alt="${s.name}"
+                 onerror="this.src='https://via.placeholder.com/300x180/e8f5e9/2e7d32?text=${encodeURIComponent(s.name)}'"
+                 onclick="openRequestModalById(${s.id})" style="cursor:pointer">
+            <div class="product-card-body">
+              <div class="product-card-cat">${getCategoryIcon(s.category)} ${s.category}</div>
+              <div class="product-card-name" onclick="openRequestModalById(${s.id})" style="cursor:pointer">${s.name}</div>
+              <div class="product-card-desc">${s.description}</div>
+              <div class="product-card-meta">
+                <div class="product-card-price">${formatPrice(s.price)} <span>/ ${s.unit}</span></div>
+                <div class="product-card-rating">★ ${s.rating || 4.5} <span style="color:#94a3b8">(${s.reviews || 10})</span></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:4px">
+                <div class="product-card-location" style="margin-bottom:0">📍 ${s.location || 'Local Hub'}</div>
+                ${distBadge}
+              </div>
+              <div style="margin-top:4px">
+                <button class="btn btn-primary btn-sm btn-full" style="border-radius:12px;font-weight:700" onclick="openRequestModalById(${s.id})">
+                  📝 ${AgroI18n.get('farmer.request_service', 'Request Service')}
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openRequestModalById(serviceId) {
+      const s = allServices.find(x => x.id === Number(serviceId));
+      if (!s) return;
+      selectedServiceForModal = s;
+
+      document.getElementById('reqServiceId').value = s.id;
+      document.getElementById('reqProviderId').value = s.posted_by || (s.provider?.id || '');
+      document.getElementById('reqUnitPrice').value = s.price;
+      document.getElementById('reqModalServiceName').textContent = s.name;
+      document.getElementById('reqModalProvider').textContent = `Provider: ${s.provider?.name || 'Verified Partner'}`;
+      document.getElementById('reqModalPrice').textContent = `${formatPrice(s.price)} / ${s.unit}`;
+      document.getElementById('reqQuantity').value = 1;
+
+      const loc = typeof AgroLocation !== 'undefined' ? AgroLocation.getCurrentLocation() : { name: '' };
+      document.getElementById('reqAddress').value = loc.name || '';
+      document.getElementById('reqDate').value = 'Tomorrow 9:00 AM';
+      document.getElementById('reqNotes').value = '';
+
+      calculateEstimatedPrice();
+      document.getElementById('requestModal').classList.add('show');
+    }
+
+    function closeRequestModal() {
+      document.getElementById('requestModal').classList.remove('show');
+      selectedServiceForModal = null;
+    }
+
+    function calculateEstimatedPrice() {
+      const qty = Math.max(1, parseInt(document.getElementById('reqQuantity').value) || 1);
+      const unitPrice = parseFloat(document.getElementById('reqUnitPrice').value) || 0;
+      const total = qty * unitPrice;
+      document.getElementById('reqTotalEstimate').textContent = formatPrice(total);
+    }
+
+    async function submitServiceRequest() {
+      const serviceId = parseInt(document.getElementById('reqServiceId').value);
+      const providerId = document.getElementById('reqProviderId').value;
+      const quantity = parseInt(document.getElementById('reqQuantity').value) || 1;
+      const preferredDate = document.getElementById('reqDate').value.trim();
+      const address = document.getElementById('reqAddress').value.trim();
+      const notes = document.getElementById('reqNotes').value.trim();
+      const btn = document.getElementById('submitReqBtn');
+
+      if (!selectedServiceForModal) return;
+      if (!address || !preferredDate) {
+        showToast(AgroI18n.get('common.fill_required', 'Please fill in address and preferred date.'), 'error');
+        return;
+      }
+
+      const payload = {
+        service_id: serviceId,
+        service_name: selectedServiceForModal.name,
+        provider_id: providerId || null,
+        quantity,
+        price: quantity * (selectedServiceForModal.price || 0),
+        payment_method: 'cod',
+        address,
+        notes,
+        preferred_date: preferredDate
+      };
+
+      try {
+        btn.disabled = true;
+        btn.textContent = AgroI18n.get('common.loading', 'Submitting...');
+        await apiCreateServiceRequest(payload);
+        closeRequestModal();
+        showToast(AgroI18n.get('services.confirm_success', 'Your service request has been sent to the provider!'), 'success');
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = `<span data-i18n="services.submit_request">${AgroI18n.get('services.submit_request', 'Send Request to Provider →')}</span>`;
+        showToast(err.message, 'error');
+      }
+    }
+
+    function openLocationPickerModal() {
+      const modal = document.getElementById('locationModal');
+      if (modal) modal.classList.add('show');
+    }
+
+    function closeLocationPickerModal() {
+      const modal = document.getElementById('locationModal');
+      if (modal) modal.classList.remove('show');
+    }
+
+    function saveSelectedLocation() {
+      const sel = document.getElementById('districtSelect');
+      if (!sel) return;
+      const locName = sel.value;
+      const coords = AgroLocation.getCoordsForText(locName);
+      AgroLocation.setCurrentLocation(locName, coords.lat, coords.lon, false);
+      closeLocationPickerModal();
+      showToast(`Location set to ${locName}`, 'success');
+    }
+
+    async function triggerGPSDetect() {
+      const btn = document.getElementById('gpsDetectBtn');
+      if (btn) btn.innerHTML = `<span>🛰️</span> <span>${AgroI18n.get('location.detecting', 'Detecting...')}</span>`;
+      try {
+        const loc = await AgroLocation.detectGPS();
+        showToast(AgroI18n.get('location.gps_success', 'GPS location detected!'), 'success');
+      } catch (err) {
+        showToast(AgroI18n.get('location.gps_error', 'Could not detect GPS. Using default location.'), 'warning');
+      } finally {
+        if (btn) btn.innerHTML = `<span>🛰️</span> <span data-i18n="location.detect_gps">Detect Live GPS</span>`;
+      }
+    }
+  </script>
+</body>
+</html>

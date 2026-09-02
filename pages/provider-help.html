@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Provider Help – AgroTECH</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    .help-layout {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 3rem;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    @media(max-width: 900px) { .help-layout { grid-template-columns: 1fr; } }
+
+    .faq-card {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+      border: 1px solid var(--green-100);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .faq-card h2 { font-size: 1.2rem; color: var(--green-900); margin-bottom: 1.5rem; }
+
+    .faq-item {
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .faq-item:last-of-type { border-bottom: none; }
+
+    .faq-q {
+      padding: 14px 0;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--gray-800);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: var(--transition);
+      user-select: none;
+    }
+
+    .faq-q:hover { color: var(--green-700); }
+
+    .faq-q .arrow {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #e0f2fe;
+      color: #0369a1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      flex-shrink: 0;
+      transition: var(--transition);
+    }
+
+    .faq-q.open .arrow { background: #0284c7; color: white; transform: rotate(180deg); }
+
+    .faq-a {
+      padding: 0 0 14px;
+      font-size: 0.875rem;
+      color: var(--gray-600);
+      line-height: 1.7;
+      display: none;
+    }
+
+    .faq-a.open { display: block; }
+
+    .support-card {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: 1.75rem;
+      border: 1px solid var(--green-100);
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 80px;
+    }
+
+    .contact-info {
+      background: var(--green-50);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-top: 1.25rem;
+      font-size: 0.82rem;
+      color: var(--gray-600);
+      border: 1.5px solid var(--green-100);
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar" id="navbar"></nav>
+
+  <!-- Hero Header -->
+  <div class="page-header">
+    <div class="farmer-dash-inner">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:1rem">
+        <div class="breadcrumb" style="padding:0;color:rgba(255,255,255,0.7)">
+          <a href="provider-dashboard.html" style="color:rgba(255,255,255,0.7)" data-i18n="nav.provider_dashboard">Dashboard</a>
+          <span>/</span>
+          <span style="color:white" data-i18n="prov_help.title">Help</span>
+        </div>
+
+        <div class="lang-dual-toggle">
+          <button type="button" class="lang-dual-btn lang-dual-en active" onclick="AgroI18n.setLanguage('en')">🇬🇧 English</button>
+          <button type="button" class="lang-dual-btn lang-dual-hi" onclick="AgroI18n.setLanguage('hi')">🇮🇳 हिंदी</button>
+        </div>
+      </div>
+
+      <h1 style="font-size:clamp(1.6rem, 3vw, 2.2rem);color:white;font-weight:800;margin-bottom:4px" data-i18n="prov_help.title">
+        ❓ Provider Guide & Support
+      </h1>
+      <p style="color:rgba(255,255,255,0.85);font-size:0.92rem" data-i18n="prov_help.subtitle">
+        Learn how to list equipment, respond to customer requests, and grow your revenue.
+      </p>
+    </div>
+  </div>
+
+  <div class="help-layout">
+
+    <div>
+      <div class="faq-card">
+        <h2>📋 Provider FAQs & Best Practices</h2>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <span data-i18n="prov_help.faq1_q">1. How do I add and manage my farm equipment?</span>
+            <div class="arrow">▼</div>
+          </div>
+          <div class="faq-a" data-i18n="prov_help.faq1_a">
+            Go to "Add Service" in your navigation bar, fill in the details (equipment name, pricing, unit, photo, location) and click Publish. You can manage, edit or deactivate listings anytime from "My Services".
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <span data-i18n="prov_help.faq2_q">2. How do I get notified of new customer requests?</span>
+            <div class="arrow">▼</div>
+          </div>
+          <div class="faq-a" data-i18n="prov_help.faq2_a">
+            Whenever a farmer books your service, it immediately appears in your "Requests" tab and an alert is added to your "Alerts" center.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <span data-i18n="prov_help.faq3_q">3. What happens when I accept a request?</span>
+            <div class="arrow">▼</div>
+          </div>
+          <div class="faq-a" data-i18n="prov_help.faq3_a">
+            Accepting a request sends an instant confirmation alert to the farmer with your contact details so you both can coordinate delivery or service execution.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <span>4. How do I temporarily pause an equipment listing? / लिस्टिंग को अस्थायी रूप से कैसे रोकें?</span>
+            <div class="arrow">▼</div>
+          </div>
+          <div class="faq-a">
+            Go to "My Services" and use the toggle switch next to any service card. Turning it off hides the equipment from search results while preserving all details for when you want to reactivate it.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            <span data-i18n="prov_help.faq4_q">5. How do I contact platform support?</span>
+            <div class="arrow">▼</div>
+          </div>
+          <div class="faq-a" data-i18n="prov_help.faq4_a">
+            You can submit the support inquiry form below or call the AgroTech helpline at +91 11 1234 5678.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="support-card">
+        <h2 style="font-size:1.1rem;color:var(--green-900);margin-bottom:0.4rem">📬 Provider Support Desk</h2>
+        <p style="font-size:0.8rem;color:var(--gray-400);margin-bottom:1.25rem">Direct assistance for equipment partners</p>
+
+        <div class="form-group">
+          <label class="form-label">Inquiry Topic *</label>
+          <select id="supportTopic" class="form-select">
+            <option value="">-- Select topic --</option>
+            <option>Equipment Verification</option>
+            <option>Customer Booking Dispute</option>
+            <option>Payment & Settlements</option>
+            <option>Technical Listing Error</option>
+            <option>Other Partnership Inquiry</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Partner / Business Name</label>
+          <input type="text" id="supportName" class="form-input" placeholder="Your business name">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Message *</label>
+          <textarea id="supportMsg" class="form-textarea" rows="4" placeholder="Describe your question or issue..."></textarea>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="submitSupport()" id="supBtn">
+          📤 Send Support Inquiry
+        </button>
+
+        <div class="contact-info">
+          <strong>📞 Partner Partner Support</strong><br>
+          +91 11 1234 5678<br>
+          Mon–Sat: 8:00 AM – 7:00 PM IST
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <footer class="footer">
+    <p>© 2025 AgroTECH • Provider Partner Portal</p>
+  </footer>
+
+  <div id="global-toast" class="toast"></div>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/global.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!requireRole(['provider', 'seller'])) return;
+      renderNavbar('help');
+      const user = AgroData.getUser();
+      document.getElementById('supportName').value = user.name || '';
+    });
+
+    function toggleFaq(el) {
+      const ans = el.nextElementSibling;
+      const isOpen = el.classList.contains('open');
+      document.querySelectorAll('.faq-q').forEach(q => {
+        q.classList.remove('open');
+        q.nextElementSibling.classList.remove('open');
+      });
+      if (!isOpen) {
+        el.classList.add('open');
+        ans.classList.add('open');
+      }
+    }
+
+    async function submitSupport() {
+      const topic = document.getElementById('supportTopic').value;
+      const msg = document.getElementById('supportMsg').value.trim();
+      const btn = document.getElementById('supBtn');
+      if (!topic || !msg) {
+        showToast(AgroI18n.get('common.fill_required', 'Please select a topic and write your message.'), 'error');
+        return;
+      }
+      try {
+        btn.disabled = true;
+        await apiRequest('/complaints', {
+          method: 'POST',
+          body: JSON.stringify({ subject: `[Provider] ${topic}`, description: msg, priority: 'medium' })
+        });
+        btn.disabled = false;
+        showToast('Inquiry submitted! Our partner desk will respond within 24 hours. ✅', 'success');
+        document.getElementById('supportMsg').value = '';
+      } catch (err) {
+        btn.disabled = false;
+        showToast(err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

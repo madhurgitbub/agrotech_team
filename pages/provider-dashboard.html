@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Provider Dashboard – AgroTECH</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/home.css">
+  <style>
+    .provider-hero {
+      background: linear-gradient(140deg, #021406 0%, #06260e 30%, #0d3b17 70%, #155222 100%);
+      color: white;
+      padding: 3rem 1.75rem 2.25rem;
+      border-radius: 0 0 28px 28px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 2rem;
+      box-shadow: 0 12px 40px rgba(2, 20, 6, 0.35);
+    }
+    .provider-hero::before {
+      content: '';
+      position: absolute;
+      top: -50px; right: -50px;
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(74, 222, 128, 0.22) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .provider-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+    }
+    .dash-section-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media(max-width:900px) { .dash-section-grid { grid-template-columns: 1fr; } }
+
+    .req-item {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      transition: all 0.2s;
+    }
+    .req-item:hover {
+      background: #dcfce7;
+      border-color: #86efac;
+    }
+    .req-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Provider Navbar -->
+  <nav class="navbar" id="navbar"></nav>
+
+  <!-- Provider Hero Banner -->
+  <section class="provider-hero">
+    <div class="provider-inner">
+      <div class="top-row">
+        <div>
+          <div style="color:#a7f3d0;font-weight:700;font-size:0.95rem;margin-bottom:4px" id="greeting">
+            Welcome back 👋
+          </div>
+          <h1 style="font-size:clamp(1.6rem, 3vw, 2.2rem);font-weight:800;margin:0;color:white">
+            <span data-i18n="provider.dash_title">Provider Dashboard</span> — <span id="providerName" style="color:#69f0ae">Partner</span>
+          </h1>
+          <p style="color:rgba(255,255,255,0.85);font-size:0.9rem;margin-top:6px;max-width:620px" data-i18n="provider.dash_subtitle">
+            Manage your machinery listings, respond to farmer bookings, coordinate work, and confirm job completion.
+          </p>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <div class="lang-dual-toggle">
+            <button type="button" class="lang-dual-btn lang-dual-en active" onclick="AgroI18n.setLanguage('en')">🇬🇧 English</button>
+            <button type="button" class="lang-dual-btn lang-dual-hi" onclick="AgroI18n.setLanguage('hi')">🇮🇳 हिंदी</button>
+          </div>
+
+          <a href="provider-add-service.html" class="btn btn-primary" style="background:linear-gradient(135deg,#10b981,#059669);color:white;font-weight:700;border-radius:20px;padding:8px 18px;box-shadow:0 4px 14px rgba(16,185,129,0.3)" data-i18n="nav.add_service">
+            ➕ Add New Service
+          </a>
+
+          <div class="role-badge role-badge-provider" style="background:rgba(255,255,255,0.18);color:white;border:1px solid rgba(255,255,255,0.35);backdrop-filter:blur(10px)">
+            🚜 <span data-i18n="role.provider">Provider Portal</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="container" style="max-width:1200px;margin-bottom:3rem">
+
+    <!-- 5 Summary Metric Cards -->
+    <div class="stats-grid-5">
+      <div class="home-stat-card">
+        <span class="home-stat-icon">📋</span>
+        <div>
+          <div class="home-stat-num" id="statTotalServices">0</div>
+          <div class="home-stat-label" data-i18n="provider.stat_total_services">Total Services</div>
+        </div>
+      </div>
+      <div class="home-stat-card">
+        <span class="home-stat-icon">✅</span>
+        <div>
+          <div class="home-stat-num" id="statActiveServices" style="color:#15803d">0</div>
+          <div class="home-stat-label" data-i18n="provider.stat_active_services">Active Listings</div>
+        </div>
+      </div>
+      <div class="home-stat-card">
+        <span class="home-stat-icon">⏳</span>
+        <div>
+          <div class="home-stat-num" id="statPendingRequests" style="color:#b45309">0</div>
+          <div class="home-stat-label" data-i18n="provider.stat_pending_requests">Pending Requests</div>
+        </div>
+      </div>
+      <div class="home-stat-card">
+        <span class="home-stat-icon">🤝</span>
+        <div>
+          <div class="home-stat-num" id="statAcceptedRequests" style="color:#0284c7">0</div>
+          <div class="home-stat-label" data-i18n="provider.stat_accepted_requests">Accepted Jobs</div>
+        </div>
+      </div>
+      <div class="home-stat-card">
+        <span class="home-stat-icon">🏁</span>
+        <div>
+          <div class="home-stat-num" id="statCompletedRequests" style="color:#15803d">0</div>
+          <div class="home-stat-label" data-i18n="provider.stat_completed_requests">Completed Jobs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Sections -->
+    <div class="dash-section-grid">
+
+      <!-- Incoming Requests Section -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <h3 style="color:var(--green-900);font-size:1.15rem;display:flex;align-items:center;gap:8px;margin:0">
+            📥 <span data-i18n="provider.recent_requests">Incoming Farmer Requests</span>
+          </h3>
+          <a href="provider-requests.html" class="btn btn-secondary btn-sm" data-i18n="farmer.view_all">View All →</a>
+        </div>
+        <div id="recentRequestsList">
+          <div style="color:var(--gray-500);text-align:center;padding:2rem" data-i18n="provider.no_requests">Loading requests...</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions & Provider Alerts -->
+      <div>
+        <div class="panel-card" style="margin-bottom:1.5rem">
+          <h3 style="color:var(--green-900);font-size:1.1rem;margin-bottom:1rem" data-i18n="farmer.quick_actions">Quick Actions</h3>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <a href="provider-add-service.html" class="btn btn-primary" style="justify-content:flex-start;border-radius:12px" data-i18n="add_service.title">
+              ➕ List a New Equipment / Service
+            </a>
+            <a href="provider-services.html" class="btn btn-secondary" style="justify-content:flex-start;border-radius:12px" data-i18n="my_services.title">
+              🚜 Manage & Edit My Services
+            </a>
+            <a href="provider-requests.html" class="btn btn-secondary" style="justify-content:flex-start;border-radius:12px" data-i18n="prov_req.title">
+              📥 Review Customer Bookings
+            </a>
+            <a href="provider-help.html" class="btn btn-secondary" style="justify-content:flex-start;border-radius:12px" data-i18n="prov_help.title">
+              ❓ Provider Guide & Tips
+            </a>
+          </div>
+        </div>
+
+        <!-- Recent Alerts -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 style="color:var(--green-900);font-size:1.05rem;margin:0">🔔 Provider Alerts</h3>
+            <a href="provider-alerts.html" class="btn btn-secondary btn-sm">All Alerts →</a>
+          </div>
+          <div id="providerAlertsList">
+            <div style="color:var(--gray-500);font-size:0.85rem">Loading alerts...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="footer">
+    <p>© 2025 AgroTECH • Provider Partner Center • Helpline: +91 11 1234 5678</p>
+  </footer>
+
+  <div id="global-toast" class="toast"></div>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/global.js"></script>
+  <script>
+    let myServices = [];
+    let incomingRequests = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!requireRole(['provider', 'seller'])) return;
+      renderNavbar('dashboard');
+      loadProviderName();
+
+      await Promise.all([
+        loadProviderStatsAndServices(),
+        loadIncomingRequests(),
+        loadProviderAlerts()
+      ]);
+    });
+
+    window.addEventListener('agroLanguageChanged', () => {
+      loadIncomingRequests();
+      loadProviderAlerts();
+    });
+
+    function loadProviderName() {
+      const u = AgroData.getUser();
+      document.getElementById('providerName').textContent = u.name || 'Partner';
+    }
+
+    async function loadProviderStatsAndServices() {
+      try {
+        const res = await apiGetMyServices();
+        myServices = res.services || [];
+        document.getElementById('statTotalServices').textContent = myServices.length;
+        document.getElementById('statActiveServices').textContent = myServices.filter(s => s.available !== false).length;
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+
+    async function loadIncomingRequests() {
+      const el = document.getElementById('recentRequestsList');
+      try {
+        const res = await apiGetProviderRequests();
+        incomingRequests = res.requests || [];
+        
+        document.getElementById('statPendingRequests').textContent = incomingRequests.filter(r => r.status === 'pending').length;
+        document.getElementById('statAcceptedRequests').textContent = incomingRequests.filter(r => r.status === 'accepted' || r.status === 'confirmed').length;
+        document.getElementById('statCompletedRequests').textContent = incomingRequests.filter(r => r.status === 'completed').length;
+
+        if (incomingRequests.length === 0) {
+          el.innerHTML = `
+            <div class="empty-state" style="padding:1.5rem">
+              <div class="empty-icon">📥</div>
+              <h4 data-i18n="prov_req.empty_title">${AgroI18n.get('prov_req.empty_title', 'No Requests Received')}</h4>
+              <p style="font-size:0.85rem" data-i18n="prov_req.empty_desc">${AgroI18n.get('prov_req.empty_desc', 'When farmers book your services, their requests will appear here.')}</p>
+            </div>`;
+          return;
+        }
+
+        const isHi = typeof AgroI18n !== 'undefined' && AgroI18n.currentLang === 'hi';
+        const recent = incomingRequests.slice(0, 5);
+
+        el.innerHTML = recent.map(r => {
+          const isPending = r.status === 'pending';
+          const isAccepted = r.status === 'accepted' || r.status === 'confirmed';
+          const isCompleted = r.status === 'completed';
+
+          return `
+            <div class="req-item">
+              <div style="flex:1;min-width:200px">
+                <div style="font-weight:700;color:var(--gray-800);font-size:0.95rem">${r.service_name}</div>
+                <div style="font-size:0.82rem;color:var(--gray-500);margin-top:2px">
+                  <span>👤 <b>${r.farmer_name || r.farmer?.name || 'Farmer'}</b></span> · 
+                  <span>📞 ${r.farmer_phone || r.farmer?.phone || '—'}</span> · 
+                  <span>📍 ${r.address || 'Local'}</span>
+                </div>
+                ${r.notes ? `<div style="font-size:0.78rem;color:var(--gray-600);margin-top:2px">📝 ${r.notes}</div>` : ''}
+              </div>
+              <div style="text-align:right">
+                <div style="font-weight:800;color:var(--green-700);font-size:1rem">${formatPrice(r.price)}</div>
+                <span class="status-pill status-${r.status}" style="margin-top:4px">${r.status.toUpperCase()}</span>
+              </div>
+
+              ${isPending ? `
+                <div class="req-actions" style="width:100%;margin-top:6px;border-top:1px dashed #bbf7d0;padding-top:8px">
+                  <button class="btn btn-primary btn-sm" style="border-radius:10px" onclick="handleQuickStatus('${r.request_id || r.id}', 'accepted')">
+                    ✅ ${isHi ? 'स्वीकार करें' : 'Accept Request'}
+                  </button>
+                  <button class="btn btn-danger btn-sm" style="border-radius:10px" onclick="handleQuickStatus('${r.request_id || r.id}', 'rejected')">
+                    ❌ ${isHi ? 'अस्वीकार करें' : 'Reject'}
+                  </button>
+                </div>
+              ` : ''}
+
+              ${isAccepted ? `
+                <div class="req-actions" style="width:100%;margin-top:6px;border-top:1px dashed #bbf7d0;padding-top:8px;display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:0.8rem;color:#0284c7;font-weight:700">⚡ ${isHi ? 'कार्य प्रगति पर' : 'Job In Progress'}</span>
+                  <button class="btn-work-done" style="padding:6px 14px;font-size:0.8rem" onclick="AgroWorkDone.openModal('${r.request_id || r.id}', '${r.service_name}', 'provider')">
+                    <span>🏁</span> <span>${isHi ? 'काम पूरा चिह्नित करें' : 'Mark Work Done'}</span>
+                  </button>
+                </div>
+              ` : ''}
+
+              ${isCompleted ? `
+                <div style="width:100%;text-align:right;font-size:0.8rem;color:#15803d;font-weight:700;margin-top:4px">
+                  ✨ ${isHi ? 'कार्य संपन्न' : 'Service Completed'}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        el.innerHTML = `<div style="color:var(--gray-500)">Failed to load requests.</div>`;
+      }
+    }
+
+    async function handleQuickStatus(id, status) {
+      try {
+        await apiUpdateRequestStatus(id, status);
+        showToast(status === 'accepted' ? AgroI18n.get('prov_req.accepted_msg', 'Request accepted! Farmer notified.') : AgroI18n.get('prov_req.rejected_msg', 'Request rejected.'), 'success');
+        await loadIncomingRequests();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function loadProviderAlerts() {
+      const el = document.getElementById('providerAlertsList');
+      try {
+        const res = await apiGetAlerts();
+        const alerts = res.alerts || [];
+        if (alerts.length === 0) {
+          el.innerHTML = `<div style="color:var(--gray-500);font-size:0.85rem">No new alerts.</div>`;
+          return;
+        }
+        el.innerHTML = alerts.slice(0, 3).map(a => `
+          <div style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:0.85rem">
+            <strong style="color:var(--gray-800);display:block">${a.title}</strong>
+            <span style="color:var(--gray-600);font-size:0.8rem">${a.message}</span>
+          </div>
+        `).join('');
+      } catch (_) {
+        el.innerHTML = `<div style="color:var(--gray-500)">No alerts.</div>`;
+      }
+    }
+  </script>
+</body>
+</html>

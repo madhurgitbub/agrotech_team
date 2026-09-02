@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alerts – AgroTECH</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    .notif-layout {
+      max-width: 760px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 3rem;
+    }
+
+    .notif-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .notif-toolbar h2 { font-size: 1.15rem; color: var(--green-900); }
+
+    .notif-item {
+      background: white;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--green-100);
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+    }
+
+    .notif-item:hover { box-shadow: var(--shadow-md); transform: translateX(3px); }
+
+    .notif-item.unread {
+      border-left: 4px solid var(--green-500);
+      background: var(--green-50);
+    }
+
+    .notif-icon {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .notif-icon.request  { background: #e0f2fe; }
+    .notif-icon.status   { background: #e8f5e9; }
+    .notif-icon.system   { background: #fef3c7; }
+    .notif-icon.promo    { background: #f3e8ff; }
+
+    .notif-body { flex: 1; min-width: 0; }
+
+    .notif-title {
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: var(--gray-800);
+      margin-bottom: 2px;
+    }
+
+    .notif-msg {
+      font-size: 0.85rem;
+      color: var(--gray-600);
+      line-height: 1.5;
+    }
+
+    .notif-time {
+      font-size: 0.75rem;
+      color: var(--gray-400);
+      white-space: nowrap;
+      margin-top: 4px;
+    }
+
+    .unread-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green-500);
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+
+    .notif-filter {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" id="navbar"></nav>
+
+  <!-- Hero Header -->
+  <div class="page-header">
+    <div class="farmer-dash-inner">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:1rem">
+        <div class="breadcrumb" style="padding:0;color:rgba(255,255,255,0.7)">
+          <a href="home.html" style="color:rgba(255,255,255,0.7)" data-i18n="nav.home">Dashboard</a>
+          <span>/</span>
+          <span style="color:white" data-i18n="nav.notifications">Notifications</span>
+        </div>
+
+        <div class="lang-dual-toggle">
+          <button type="button" class="lang-dual-btn lang-dual-en active" onclick="AgroI18n.setLanguage('en')">🇬🇧 English</button>
+          <button type="button" class="lang-dual-btn lang-dual-hi" onclick="AgroI18n.setLanguage('hi')">🇮🇳 हिंदी</button>
+        </div>
+      </div>
+
+      <h1 style="font-size:clamp(1.6rem, 3vw, 2.2rem);color:white;font-weight:800;margin-bottom:4px" data-i18n="alerts.title">
+        🔔 Alerts & Notifications
+      </h1>
+      <p style="color:rgba(255,255,255,0.85);font-size:0.92rem" data-i18n="alerts.subtitle">
+        Stay updated on your service bookings, provider responses, and farm updates.
+      </p>
+    </div>
+  </div>
+
+  <div class="notif-layout">
+    <div class="notif-toolbar">
+      <h2>
+        <span data-i18n="farmer.recent_alerts">Recent Alerts</span>
+        <span id="unreadBadge" class="badge badge-success" style="display:none;margin-left:6px"></span>
+      </h2>
+      <button class="btn btn-secondary btn-sm" onclick="handleMarkAllRead()" data-i18n="alerts.mark_all_read">
+        ✓ Mark all read
+      </button>
+    </div>
+
+    <div class="notif-filter">
+      <button class="filter-tab active" onclick="filterAlerts('all', this)" data-i18n="alerts.tab_all">All Alerts</button>
+      <button class="filter-tab" onclick="filterAlerts('request', this)" data-i18n="alerts.tab_requests">📦 Requests</button>
+      <button class="filter-tab" onclick="filterAlerts('system', this)" data-i18n="alerts.tab_system">📢 System</button>
+    </div>
+
+    <div id="notifList"></div>
+  </div>
+
+  <footer class="footer"><p>© 2025 AgroTECH</p></footer>
+  <div id="global-toast" class="toast"></div>
+
+  <script src="../js/i18n.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/global.js"></script>
+  <script>
+    let alertsList = [];
+    let currentFilter = 'all';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!requireRole('farmer')) return;
+      renderNavbar('notif');
+      loadAlerts();
+    });
+
+    async function loadAlerts() {
+      try {
+        const data = await apiGetAlerts();
+        alertsList = data.alerts || [];
+        renderAlerts(alertsList);
+        updateUnreadBadge();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function filterAlerts(type, btn) {
+      currentFilter = type;
+      document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filtered = type === 'all' ? alertsList : alertsList.filter(n => n.type === type);
+      renderAlerts(filtered);
+    }
+
+    function renderAlerts(list) {
+      const el = document.getElementById('notifList');
+      if (list.length === 0) {
+        el.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🔔</div>
+            <h3 data-i18n="alerts.empty">${AgroI18n.get('alerts.empty', 'No alerts at the moment.')}</h3>
+            <p>You\'re all caught up!</p>
+          </div>`;
+        return;
+      }
+
+      el.innerHTML = list.map(n => {
+        const isUnread = !n.is_read;
+        const icon = n.type === 'request' ? '📦' : n.type === 'status' ? '✅' : n.type === 'promo' ? '🎉' : '📢';
+        return `
+          <div class="notif-item ${isUnread ? 'unread' : ''}" onclick="handleReadAlert(${n.id}, this)">
+            <div class="notif-icon ${n.type || 'system'}">${icon}</div>
+            <div class="notif-body">
+              <div class="notif-title">${n.title || 'Notification'}</div>
+              <div class="notif-msg">${n.message}</div>
+              <div class="notif-time">🕐 ${formatDate(n.created_at)}</div>
+            </div>
+            ${isUnread ? '<div class="unread-dot"></div>' : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function handleReadAlert(id, el) {
+      try {
+        await apiMarkAlertRead(id);
+        const item = alertsList.find(x => x.id === id);
+        if (item) item.is_read = true;
+        el.classList.remove('unread');
+        el.querySelector('.unread-dot')?.remove();
+        updateUnreadBadge();
+      } catch (_) {}
+    }
+
+    async function handleMarkAllRead() {
+      try {
+        await apiMarkAllAlertsRead();
+        alertsList.forEach(a => a.is_read = true);
+        renderAlerts(currentFilter === 'all' ? alertsList : alertsList.filter(n => n.type === currentFilter));
+        updateUnreadBadge();
+        showToast('All notifications marked as read ✓', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function updateUnreadBadge() {
+      const count = alertsList.filter(n => !n.is_read).length;
+      const badge = document.getElementById('unreadBadge');
+      if (count > 0) {
+        badge.textContent = count + ' new';
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

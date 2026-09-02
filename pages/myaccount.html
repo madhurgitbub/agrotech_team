@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmer Profile – AgroTECH</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    .account-layout {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .profile-card {
+      background: linear-gradient(135deg, var(--green-800), var(--green-600));
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .avatar-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: 3px solid rgba(255,255,255,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      flex-shrink: 0;
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+    }
+
+    .profile-info h2 { font-size: 1.3rem; margin-bottom: 4px; }
+    .profile-info p { opacity: 0.8; font-size: 0.875rem; }
+
+    .details-card {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+      border: 1px solid var(--green-100);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .details-card h3 {
+      font-size: 1.1rem;
+      color: var(--green-900);
+      margin-bottom: 1.5rem;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--green-100);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media(max-width:600px) { .details-grid { grid-template-columns: 1fr; } }
+
+    .detail-field label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .detail-value {
+      padding: 10px 14px;
+      background: var(--green-50);
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--gray-800);
+      border: 1.5px solid var(--green-100);
+    }
+
+    .detail-input { display: none; }
+
+    body.editing .detail-value { display: none; }
+    body.editing .detail-input { display: block; }
+    body.editing #saveBtn { display: inline-flex !important; }
+    body.editing #cancelBtn { display: inline-flex !important; }
+    body.editing #editBtn { display: none !important; }
+
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .quick-link-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      text-align: center;
+      border: 1px solid var(--green-100);
+      box-shadow: var(--shadow-sm);
+      text-decoration: none;
+      color: var(--gray-700);
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quick-link-card:hover {
+      border-color: var(--green-400);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      color: var(--green-700);
+    }
+
+    .quick-link-icon { font-size: 1.75rem; }
+    .quick-link-label { font-size: 0.8rem; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar" id="navbar"></nav>
+
+  <!-- Hero Header -->
+  <div class="page-header">
+    <div class="farmer-dash-inner">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:1rem">
+        <div class="breadcrumb" style="padding:0;color:rgba(255,255,255,0.7)">
+          <a href="home.html" style="color:rgba(255,255,255,0.7)" data-i18n="nav.home">Dashboard</a>
+          <span>/</span>
+          <span style="color:white" data-i18n="nav.my_account">Profile</span>
+        </div>
+
+        <div class="lang-dual-toggle">
+          <button type="button" class="lang-dual-btn lang-dual-en active" onclick="AgroI18n.setLanguage('en')">🇬🇧 English</button>
+          <button type="button" class="lang-dual-btn lang-dual-hi" onclick="AgroI18n.setLanguage('hi')">🇮🇳 हिंदी</button>
+        </div>
+      </div>
+
+      <h1 style="font-size:clamp(1.6rem, 3vw, 2.2rem);color:white;font-weight:800;margin-bottom:4px" data-i18n="profile.title">
+        👤 Farmer Profile & Farm Settings
+      </h1>
+      <p style="color:rgba(255,255,255,0.85);font-size:0.92rem" data-i18n="profile.subtitle">
+        Manage your personal details, contact phone, farm location, and agricultural preferences.
+      </p>
+    </div>
+  </div>
+
+  <div class="account-layout">
+
+    <!-- Profile Banner -->
+    <div class="profile-card">
+      <div class="avatar-circle" id="avatarCircle">F</div>
+      <div class="profile-info">
+        <h2 id="profileName">Loading...</h2>
+        <p id="profileEmail">loading...</p>
+        <div class="role-badge role-badge-farmer" style="margin-top:6px;background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.4)">
+          🌾 <span data-i18n="role.farmer">Farmer</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Details -->
+    <div class="details-card">
+      <h3>
+        <span data-i18n="profile.title">Account Details</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" id="editBtn" onclick="toggleEdit(true)" data-i18n="profile.edit_btn">✏️ Edit Profile</button>
+          <button class="btn btn-primary btn-sm" id="saveBtn" onclick="saveChanges()" style="display:none" data-i18n="profile.save_btn">💾 Save</button>
+          <button class="btn btn-danger btn-sm" id="cancelBtn" onclick="toggleEdit(false)" style="display:none" data-i18n="profile.cancel_btn">✕ Cancel</button>
+        </div>
+      </h3>
+      <div class="details-grid">
+        <div class="detail-field">
+          <label data-i18n="profile.full_name">Full Name</label>
+          <div class="detail-value" id="dName"></div>
+          <input type="text" class="form-input detail-input" id="iName" placeholder="Full Name">
+        </div>
+        <div class="detail-field">
+          <label data-i18n="profile.email">Email Address</label>
+          <div class="detail-value" id="dEmail"></div>
+          <input type="email" class="form-input detail-input" id="iEmail" placeholder="Email">
+        </div>
+        <div class="detail-field">
+          <label data-i18n="profile.phone">Phone Number</label>
+          <div class="detail-value" id="dPhone"></div>
+          <input type="tel" class="form-input detail-input" id="iPhone" placeholder="Phone">
+        </div>
+        <div class="detail-field">
+          <label data-i18n="profile.location">Location / Village</label>
+          <div class="detail-value" id="dLocation"></div>
+          <input type="text" class="form-input detail-input" id="iLocation" placeholder="Village, District, State">
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Links (Farmer Specific - No Add Service) -->
+    <h3 style="color:var(--green-900);font-size:1.1rem" data-i18n="farmer.quick_actions">Quick Actions</h3>
+    <div class="quick-links">
+      <a href="my_purchase.html" class="quick-link-card">
+        <div class="quick-link-icon">📋</div>
+        <div class="quick-link-label" data-i18n="nav.my_requests">My Requests</div>
+      </a>
+      <a href="search.html" class="quick-link-card">
+        <div class="quick-link-icon">🔍</div>
+        <div class="quick-link-label" data-i18n="nav.find_services">Find Services</div>
+      </a>
+      <a href="notifications.html" class="quick-link-card">
+        <div class="quick-link-icon">🔔</div>
+        <div class="quick-link-label" data-i18n="nav.alerts">Alerts</div>
+      </a>
+      <a href="help.html" class="quick-link-card">
+        <div class="quick-link-icon">❓</div>
+        <div class="quick-link-label" data-i18n="nav.help">Help & Support</div>
+      </a>
+      <div class="quick-link-card" onclick="handleLogout()" style="cursor:pointer">
+        <div class="quick-link-icon">🚪</div>
+        <div class="quick-link-label" data-i18n="nav.logout">Logout</div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="footer">
+    <p>© 2025 AgroTECH</p>
+  </footer>
+
+  <div id="global-toast" class="toast"></div>
+  <script src="../js/i18n.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/global.js"></script>
+  <script>
+    let user;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!requireRole('farmer')) return;
+      renderNavbar('account');
+      loadUser();
+    });
+
+    function loadUser() {
+      user = AgroData.getUser();
+      const initials = (user.name || 'Farmer').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      document.getElementById('avatarCircle').textContent = initials;
+      document.getElementById('profileName').textContent = user.name || 'Farmer';
+      document.getElementById('profileEmail').textContent = user.email || '';
+
+      document.getElementById('dName').textContent = user.name || '—';
+      document.getElementById('dEmail').textContent = user.email || '—';
+      document.getElementById('dPhone').textContent = user.phone || '—';
+      document.getElementById('dLocation').textContent = user.location || '—';
+
+      document.getElementById('iName').value = user.name || '';
+      document.getElementById('iEmail').value = user.email || '';
+      document.getElementById('iPhone').value = user.phone || '';
+      document.getElementById('iLocation').value = user.location || '';
+    }
+
+    function toggleEdit(on) {
+      if (on) document.body.classList.add('editing');
+      else { document.body.classList.remove('editing'); loadUser(); }
+    }
+
+    function saveChanges() {
+      const name = document.getElementById('iName').value.trim();
+      const email = document.getElementById('iEmail').value.trim();
+      const phone = document.getElementById('iPhone').value.trim();
+      const location = document.getElementById('iLocation').value.trim();
+
+      if (!name || !email) {
+        showToast(AgroI18n.get('common.fill_required', 'Name and email are required.'), 'error');
+        return;
+      }
+      if (!/\S+@\S+\.\S+/.test(email)) {
+        showToast('Invalid email address.', 'error');
+        return;
+      }
+
+      user = { ...user, name, email, phone, location };
+      AgroData.saveUser(user);
+      document.body.classList.remove('editing');
+      loadUser();
+      showToast(AgroI18n.get('profile.updated_success', 'Profile updated successfully! ✅'), 'success');
+    }
+  </script>
+</body>
+</html>
