@@ -605,49 +605,51 @@ const LocalStorageDB = {
   }
 };
 
-/**
- * Main API Request function.
- * Tries FastAPI backend first; seamlessly falls back to LocalStorageDB if server is offline.
- */
 async function apiRequest(path, options = {}) {
   const token = localStorage.getItem('agro_token');
-  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-  if (token) headers.Authorization = `Bearer ${token}`;
 
-  const timeoutMs = Number(options.timeoutMs || 3000);
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {})
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const timeoutMs = Number(options.timeoutMs || 10000);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
-  let isBackendAvailable = true;
-  let res;
-
   try {
-    res = await fetch(`${getApiBase()}${path}`, {
+    const res = await fetch(`${getApiBase()}${path}`, {
       ...options,
       headers,
       signal: controller.signal
     });
-  } catch (error) {
-    isBackendAvailable = false;
-  } finally {
-    clearTimeout(timeout);
-  }
 
-  // If backend was reached
-  if (isBackendAvailable && res) {
     let data = {};
     try {
       data = await res.json();
     } catch (_) {}
 
     if (!res.ok) {
-      throw new Error(data.detail || data.message || `Request failed (${res.status})`);
+      throw new Error(
+        data.detail ||
+        data.message ||
+        `Request failed (${res.status})`
+      );
     }
-    return data;
-  }
 
-  // Fallback to LocalStorageDB
-  return LocalStorageDB.handleLocalRequest(path, options);
+    return data;
+
+  } catch (error) {
+    console.error(`[AgroTech API] ${path} failed:`, error);
+    throw error;
+
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 // Session state management
@@ -776,7 +778,12 @@ async function apiUpdateRequestStatus(id, status) {
 
 // Alerts API Methods
 async function apiGetAlerts() {
-  return apiRequest('/alerts');
+  const data = await apiRequest('/alerts');
+
+  // Backend returns an array, while the frontend expects { alerts: [...] }
+  return {
+    alerts: Array.isArray(data) ? data : (data.alerts || [])
+  };
 }
 
 async function apiMarkAlertRead(id) {
