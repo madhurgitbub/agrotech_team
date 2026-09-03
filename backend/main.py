@@ -4,6 +4,16 @@ from pathlib import Path
 from dotenv import load_dotenv
 from mistralai.client import Mistral
 from pydantic import BaseModel
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from database.connection import get_db
+from models.user import User
+from models.registration_otp import RegistrationOTP
+from models.alert import Alert
+from models.service import Service
+from models.service_request import ServiceRequest
+from models.complaint import Complaint
 
 # Base directories
 BASE_DIR = Path(__file__).resolve().parent
@@ -13,14 +23,12 @@ ROOT_DIR = BASE_DIR.parent
 load_dotenv(BASE_DIR / ".env")
 
 # Mistral API key
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "").strip()
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
-print("Mistral API Key loaded:", bool(MISTRAL_API_KEY))
-
-if not MISTRAL_API_KEY:
-    raise RuntimeError(
-        "MISTRAL_API_KEY is missing. Check your backend/.env file."
-    )
+if MISTRAL_API_KEY:
+    print("Mistral API Key loaded: True")
+else:
+    print("Mistral API Key loaded: False (AI features disabled)")
 
 # Create Mistral client
 client = Mistral(
@@ -39,7 +47,7 @@ from typing import Optional, List, Dict, Any
 import os
 import json
 import uuid
-import sqlite3
+# import sqlite3
 from pathlib import Path
 import hashlib
 import secrets
@@ -74,17 +82,17 @@ SMTP_FROM_EMAIL = os.getenv('SMTP_FROM_EMAIL', '').strip()
 SMTP_USE_TLS = os.getenv('SMTP_USE_TLS', 'true').strip().lower() in {'1', 'true', 'yes', 'y'}
 SMTP_USE_SSL = os.getenv('SMTP_USE_SSL', 'false').strip().lower() in {'1', 'true', 'yes', 'y'}
 
-SQLITE_DB_PATH = BASE_DIR / 'agrotech.db'
+# SQLITE_DB_PATH = BASE_DIR / 'agrotech.db'
 
 # Supabase Client setup if available
-supabase_client = None
-if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY and not SUPABASE_URL.startswith('http://localhost'):
-    try:
-        from supabase import create_client
-        supabase_client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-    except Exception as exc:
-        print(f"[AgroTech] Supabase init failed ({exc}). Using local SQLite database.")
-        supabase_client = None
+# supabase_client = None
+# if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY and not SUPABASE_URL.startswith('http://localhost'):
+#     try:
+#         from supabase import create_client
+#         supabase_client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+#     except Exception as exc:
+#         print(f"[AgroTech] Supabase init failed ({exc}). Using local SQLite database.")
+#         supabase_client = None
 
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(16)
@@ -115,235 +123,236 @@ def verify_password(password: str, hashed: str) -> bool:
     return False
 
 # SQLite Database Manager
-class SQLiteDB:
-    def __init__(self, db_path: Path):
-        self.db_path = db_path
-        self.init_db()
 
-    def get_connection(self):
-        conn = sqlite3.connect(self.db_path, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA foreign_keys = ON;")
-        return conn
+# """class SQLiteDB:
+#     def __init__(self, db_path: Path):
+#         self.db_path = db_path
+#         self.init_db()
 
-    def init_db(self):
-        conn = self.get_connection()
-        cur = conn.cursor()
+#     def get_connection(self):
+#         conn = sqlite3.connect(self.db_path, check_same_thread=False)
+#         conn.row_factory = sqlite3.Row
+#         conn.execute("PRAGMA foreign_keys = ON;")
+#         return conn
+
+#     def init_db(self):
+#         conn = self.get_connection()
+#         cur = conn.cursor()
         
-        # 1. Users table
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                email TEXT NOT NULL UNIQUE,
-                phone TEXT NOT NULL,
-                password_hash TEXT NOT NULL,
-                location TEXT DEFAULT '',
-                role TEXT NOT NULL DEFAULT 'farmer',
-                status TEXT NOT NULL DEFAULT 'active',
-                created_at TEXT DEFAULT (datetime('now'))
-            );
-        """)
+#         # 1. Users table
+#       #  cur.execute("""
+#             CREATE TABLE IF NOT EXISTS users (
+#                 id TEXT PRIMARY KEY,
+#                 name TEXT NOT NULL,
+#                 email TEXT NOT NULL UNIQUE,
+#                 phone TEXT NOT NULL,
+#                 password_hash TEXT NOT NULL,
+#                 location TEXT DEFAULT '',
+#                 role TEXT NOT NULL DEFAULT 'farmer',
+#                 status TEXT NOT NULL DEFAULT 'active',
+#                 created_at TEXT DEFAULT (datetime('now'))
+#             );
+#         """)
 
-        # 2. Services table
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS services (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                category TEXT NOT NULL,
-                price REAL NOT NULL,
-                unit TEXT NOT NULL DEFAULT 'per day',
-                description TEXT DEFAULT '',
-                location TEXT DEFAULT '',
-                image TEXT DEFAULT '',
-                rating REAL DEFAULT 4.5,
-                reviews INTEGER DEFAULT 0,
-                available INTEGER DEFAULT 1,
-                status TEXT NOT NULL DEFAULT 'approved',
-                posted_by TEXT DEFAULT NULL,
-                created_at TEXT DEFAULT (datetime('now'))
-            );
-        """)
+#         # 2. Services table
+#         cur.execute("""
+#             CREATE TABLE IF NOT EXISTS services (
+#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                 name TEXT NOT NULL,
+#                 category TEXT NOT NULL,
+#                 price REAL NOT NULL,
+#                 unit TEXT NOT NULL DEFAULT 'per day',
+#                 description TEXT DEFAULT '',
+#                 location TEXT DEFAULT '',
+#                 image TEXT DEFAULT '',
+#                 rating REAL DEFAULT 4.5,
+#                 reviews INTEGER DEFAULT 0,
+#                 available INTEGER DEFAULT 1,
+#                 status TEXT NOT NULL DEFAULT 'approved',
+#                 posted_by TEXT DEFAULT NULL,
+#                 created_at TEXT DEFAULT (datetime('now'))
+#             );
+#         """)
 
-        # 3. Service Requests table
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS service_requests (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                request_id TEXT NOT NULL UNIQUE,
-                farmer_id TEXT DEFAULT NULL,
-                farmer_name TEXT DEFAULT '',
-                farmer_phone TEXT DEFAULT '',
-                provider_id TEXT DEFAULT NULL,
-                service_id INTEGER DEFAULT NULL,
-                service_name TEXT NOT NULL,
-                quantity INTEGER NOT NULL DEFAULT 1,
-                price REAL NOT NULL,
-                payment_method TEXT NOT NULL DEFAULT 'cod',
-                payment_status TEXT NOT NULL DEFAULT 'pending',
-                status TEXT NOT NULL DEFAULT 'pending',
-                address TEXT DEFAULT '',
-                notes TEXT DEFAULT '',
-                preferred_date TEXT DEFAULT '',
-                created_at TEXT DEFAULT (datetime('now'))
-            );
-        """)
+#         # 3. Service Requests table
+#         cur.execute("""
+#             CREATE TABLE IF NOT EXISTS service_requests (
+#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                 request_id TEXT NOT NULL UNIQUE,
+#                 farmer_id TEXT DEFAULT NULL,
+#                 farmer_name TEXT DEFAULT '',
+#                 farmer_phone TEXT DEFAULT '',
+#                 provider_id TEXT DEFAULT NULL,
+#                 service_id INTEGER DEFAULT NULL,
+#                 service_name TEXT NOT NULL,
+#                 quantity INTEGER NOT NULL DEFAULT 1,
+#                 price REAL NOT NULL,
+#                 payment_method TEXT NOT NULL DEFAULT 'cod',
+#                 payment_status TEXT NOT NULL DEFAULT 'pending',
+#                 status TEXT NOT NULL DEFAULT 'pending',
+#                 address TEXT DEFAULT '',
+#                 notes TEXT DEFAULT '',
+#                 preferred_date TEXT DEFAULT '',
+#                 created_at TEXT DEFAULT (datetime('now'))
+#             );
+#         """)
 
-        # 4. Complaints table
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS complaints (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT DEFAULT NULL,
-                subject TEXT NOT NULL,
-                description TEXT NOT NULL,
-                priority TEXT NOT NULL DEFAULT 'medium',
-                status TEXT NOT NULL DEFAULT 'open',
-                created_at TEXT DEFAULT (datetime('now'))
-            );
-        """)
+#         # 4. Complaints table
+#         cur.execute("""
+#             CREATE TABLE IF NOT EXISTS complaints (
+#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                 user_id TEXT DEFAULT NULL,
+#                 subject TEXT NOT NULL,
+#                 description TEXT NOT NULL,
+#                 priority TEXT NOT NULL DEFAULT 'medium',
+#                 status TEXT NOT NULL DEFAULT 'open',
+#                 created_at TEXT DEFAULT (datetime('now'))
+#             );
+#         """)
 
-        # 6. Alerts & Notifications table
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS alerts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id TEXT DEFAULT NULL,
-                audience TEXT NOT NULL DEFAULT 'all',
-                type TEXT NOT NULL DEFAULT 'system',
-                title TEXT NOT NULL DEFAULT 'Notification',
-                message TEXT NOT NULL,
-                is_read INTEGER NOT NULL DEFAULT 0,
-                created_by TEXT DEFAULT NULL,
-                created_at TEXT DEFAULT (datetime('now'))
-            );
-        """)
+#         # 6. Alerts & Notifications table
+#         cur.execute("""
+#             CREATE TABLE IF NOT EXISTS alerts (
+#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                 user_id TEXT DEFAULT NULL,
+#                 audience TEXT NOT NULL DEFAULT 'all',
+#                 type TEXT NOT NULL DEFAULT 'system',
+#                 title TEXT NOT NULL DEFAULT 'Notification',
+#                 message TEXT NOT NULL,
+#                 is_read INTEGER NOT NULL DEFAULT 0,
+#                 created_by TEXT DEFAULT NULL,
+#                 created_at TEXT DEFAULT (datetime('now'))
+#             );
+#         """)
 
-        # Legacy Notifications table
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS notifications (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                audience TEXT NOT NULL DEFAULT 'all',
-                message TEXT NOT NULL,
-                created_by TEXT DEFAULT NULL,
-                created_at TEXT DEFAULT (datetime('now'))
-            );
-        """)
+#         # Legacy Notifications table
+#         cur.execute("""
+#             CREATE TABLE IF NOT EXISTS notifications (
+#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                 audience TEXT NOT NULL DEFAULT 'all',
+#                 message TEXT NOT NULL,
+#                 created_by TEXT DEFAULT NULL,
+#                 created_at TEXT DEFAULT (datetime('now'))
+#             );
+#         """)
 
-        # 7. Registration OTPs table
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS registration_otps (
-                email TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                phone TEXT NOT NULL,
-                password_hash TEXT NOT NULL,
-                location TEXT DEFAULT '',
-                role TEXT NOT NULL DEFAULT 'farmer',
-                otp_code TEXT NOT NULL,
-                otp_hash TEXT NOT NULL,
-                expires_at TEXT NOT NULL,
-                attempts INTEGER NOT NULL DEFAULT 0,
-                created_at TEXT DEFAULT (datetime('now'))
-            );
-        """)
+#         # 7. Registration OTPs table
+#         cur.execute("""
+#             CREATE TABLE IF NOT EXISTS registration_otps (
+#                 email TEXT PRIMARY KEY,
+#                 name TEXT NOT NULL,
+#                 phone TEXT NOT NULL,
+#                 password_hash TEXT NOT NULL,
+#                 location TEXT DEFAULT '',
+#                 role TEXT NOT NULL DEFAULT 'farmer',
+#                 otp_code TEXT NOT NULL,
+#                 otp_hash TEXT NOT NULL,
+#                 expires_at TEXT NOT NULL,
+#                 attempts INTEGER NOT NULL DEFAULT 0,
+#                 created_at TEXT DEFAULT (datetime('now'))
+#             );
+#         """)
 
-        conn.commit()
+#         conn.commit()
 
-        # Seed initial default accounts and services
-        self.seed_defaults(conn)
-        conn.close()
+#         # Seed initial default accounts and services
+#         self.seed_defaults(conn)
+#         conn.close()
 
-    def seed_defaults(self, conn):
-        cur = conn.cursor()
+#     def seed_defaults(self, conn):
+#         cur = conn.cursor()
         
-        # 1. Default Admin
-        admin_id = 'usr-admin-01'
-        cur.execute("SELECT id FROM users WHERE email = ?", ('admin@agrotech.com',))
-        if not cur.fetchone():
-            admin_hash = hash_password('admin123')
-            cur.execute("""
-                INSERT INTO users (id, name, email, phone, password_hash, location, role, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (admin_id, 'System Administrator', 'admin@agrotech.com', '9876543210', admin_hash, 'National Head Office', 'admin', 'active'))
-            print("[AgroTech] Created default admin: admin@agrotech.com / admin123")
-        else:
-            cur.execute("UPDATE users SET role = 'admin', status = 'active' WHERE email = 'admin@agrotech.com'")
+#         # 1. Default Admin
+#         admin_id = 'usr-admin-01'
+#         cur.execute("SELECT id FROM users WHERE email = ?", ('admin@agrotech.com',))
+#         if not cur.fetchone():
+#             admin_hash = hash_password('admin123')
+#             cur.execute("""
+#                 INSERT INTO users (id, name, email, phone, password_hash, location, role, status)
+#                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+#             """, (admin_id, 'System Administrator', 'admin@agrotech.com', '9876543210', admin_hash, 'National Head Office', 'admin', 'active'))
+#             print("[AgroTech] Created default admin: admin@agrotech.com / admin123")
+#         else:
+#             cur.execute("UPDATE users SET role = 'admin', status = 'active' WHERE email = 'admin@agrotech.com'")
 
-        # 2. Default Farmer
-        farmer_id = 'usr-farmer-01'
-        cur.execute("SELECT id FROM users WHERE email = ?", ('farmer@agrotech.com',))
-        if not cur.fetchone():
-            farmer_hash = hash_password('farmer123')
-            cur.execute("""
-                INSERT INTO users (id, name, email, phone, password_hash, location, role, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (farmer_id, 'Madhur Pratap Singh', 'farmer@agrotech.com', '8127059423', farmer_hash, 'Indore, MP', 'farmer', 'active'))
-            print("[AgroTech] Created default farmer: farmer@agrotech.com / farmer123")
-        else:
-            cur.execute("UPDATE users SET role = 'farmer', status = 'active' WHERE email = 'farmer@agrotech.com'")
+#         # 2. Default Farmer
+#         farmer_id = 'usr-farmer-01'
+#         cur.execute("SELECT id FROM users WHERE email = ?", ('farmer@agrotech.com',))
+#         if not cur.fetchone():
+#             farmer_hash = hash_password('farmer123')
+#             cur.execute("""
+#                 INSERT INTO users (id, name, email, phone, password_hash, location, role, status)
+#                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+#             """, (farmer_id, 'Madhur Pratap Singh', 'farmer@agrotech.com', '8127059423', farmer_hash, 'Indore, MP', 'farmer', 'active'))
+#             print("[AgroTech] Created default farmer: farmer@agrotech.com / farmer123")
+#         else:
+#             cur.execute("UPDATE users SET role = 'farmer', status = 'active' WHERE email = 'farmer@agrotech.com'")
 
-        # 3. Default Provider
-        provider_id = 'usr-provider-01'
-        cur.execute("SELECT id FROM users WHERE email = ?", ('provider@agrotech.com',))
-        if not cur.fetchone():
-            provider_hash = hash_password('provider123')
-            cur.execute("""
-                INSERT INTO users (id, name, email, phone, password_hash, location, role, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (provider_id, 'Rajesh Patel (Kisan Agro Services)', 'provider@agrotech.com', '9893012345', provider_hash, 'Indore, MP', 'provider', 'active'))
-            print("[AgroTech] Created default provider: provider@agrotech.com / provider123")
-        else:
-            cur.execute("UPDATE users SET role = 'provider', status = 'active' WHERE email = 'provider@agrotech.com'")
+#         # 3. Default Provider
+#         provider_id = 'usr-provider-01'
+#         cur.execute("SELECT id FROM users WHERE email = ?", ('provider@agrotech.com',))
+#         if not cur.fetchone():
+#             provider_hash = hash_password('provider123')
+#             cur.execute("""
+#                 INSERT INTO users (id, name, email, phone, password_hash, location, role, status)
+#                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+#             """, (provider_id, 'Rajesh Patel (Kisan Agro Services)', 'provider@agrotech.com', '9893012345', provider_hash, 'Indore, MP', 'provider', 'active'))
+#             print("[AgroTech] Created default provider: provider@agrotech.com / provider123")
+#         else:
+#             cur.execute("UPDATE users SET role = 'provider', status = 'active' WHERE email = 'provider@agrotech.com'")
 
-        # 4. Seed Services if empty
-        cur.execute("SELECT COUNT(*) FROM services")
-        if cur.fetchone()[0] == 0:
-            default_services = [
-                (1, "Mahindra 575 DI Tractor Rental", "machinery", 800.0, "per acre", "Powerful 45HP tractor suitable for ploughing, tilling, and heavy-duty farming tasks.", "https://5.imimg.com/data5/SELLER/Default/2021/6/CX/WL/RI/30912792/mahindra-tractor-yuvraj-bumper-1000x1000.jpg", 4.8, 128, 1, "approved", "Indore, MP", provider_id),
-                (2, "John Deere 5050 D Tractor", "machinery", 1000.0, "per acre", "High-efficiency tractor with advanced hydraulics and rotary tiller attachment.", "https://cpimg.tistatic.com/10029058/b/4/John-deere-Tractors..jpg", 4.9, 95, 1, "approved", "Bhopal, MP", provider_id),
-                (3, "Modern Combine Harvester", "machinery", 1200.0, "per acre", "Fast harvesting for wheat, soybean, and paddy. Reduces harvest loss significantly.", "https://5.imimg.com/data5/WC/IE/YH/ANDROID-86040604/prod-20200810-2031297210080910753376724-jpg-1000x1000.jpg", 4.7, 72, 1, "approved", "Ujjain, MP", provider_id),
-                (4, "Fieldking Heavy Rotavator", "machinery", 500.0, "per acre", "Heavy-duty 7-feet rotavator for complete soil preparation and fine seedbed.", "https://www.fieldking.com/blogs/wp-content/uploads/2024/09/Ploughing.jpg", 4.6, 64, 1, "approved", "Gwalior, MP", provider_id),
-                (5, "Automatic Drip Irrigation Kit", "irrigation", 3500.0, "per kit", "Complete drip system for 1 acre land. Saves up to 60% water and boosts yield.", "https://5.imimg.com/data5/SELLER/Default/2022/10/BC/MY/LI/21395960/drip-irrigation-system-1000x1000.jpg", 4.8, 89, 1, "approved", "Indore, MP", provider_id),
-                (6, "IFFCO DAP Fertilizer (50kg Bag)", "fertilizer", 1350.0, "per bag", "Original certified DAP fertilizer for strong root growth and early crop establishment.", "https://5.imimg.com/data5/SELLER/Default/2022/5/NJ/VT/MB/26553143/dap-fertilizer-500x500.jpg", 4.7, 201, 1, "approved", "Bhopal, MP", provider_id),
-                (7, "HYV Premium Wheat Seeds (GW-322)", "seeds", 450.0, "per kg", "Certified disease-resistant high yield wheat seeds with high germination rate.", "https://5.imimg.com/data5/SELLER/Default/2021/9/ZG/OS/PB/3131427/wheat-seeds-500x500.jpg", 4.9, 156, 1, "approved", "Sehore, MP", provider_id),
-                (8, "5-Ton Crop Transport Mini Truck", "transport", 2500.0, "per trip", "Reliable door-to-mandi farm transport service with GPS tracking available 24/7.", "https://5.imimg.com/data5/SELLER/Default/2022/3/QF/XN/XJ/149399990/mini-truck-500x500.jpg", 4.5, 43, 1, "approved", "Indore, MP", provider_id)
-            ]
-            for s in default_services:
-                cur.execute("""
-                    INSERT INTO services (id, name, category, price, unit, description, image, rating, reviews, available, status, location, posted_by)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, s)
-            print(f"[AgroTech] Seeded {len(default_services)} initial services.")
+#         # 4. Seed Services if empty
+#         cur.execute("SELECT COUNT(*) FROM services")
+#         if cur.fetchone()[0] == 0:
+#             default_services = [
+#                 (1, "Mahindra 575 DI Tractor Rental", "machinery", 800.0, "per acre", "Powerful 45HP tractor suitable for ploughing, tilling, and heavy-duty farming tasks.", "https://5.imimg.com/data5/SELLER/Default/2021/6/CX/WL/RI/30912792/mahindra-tractor-yuvraj-bumper-1000x1000.jpg", 4.8, 128, 1, "approved", "Indore, MP", provider_id),
+#                 (2, "John Deere 5050 D Tractor", "machinery", 1000.0, "per acre", "High-efficiency tractor with advanced hydraulics and rotary tiller attachment.", "https://cpimg.tistatic.com/10029058/b/4/John-deere-Tractors..jpg", 4.9, 95, 1, "approved", "Bhopal, MP", provider_id),
+#                 (3, "Modern Combine Harvester", "machinery", 1200.0, "per acre", "Fast harvesting for wheat, soybean, and paddy. Reduces harvest loss significantly.", "https://5.imimg.com/data5/WC/IE/YH/ANDROID-86040604/prod-20200810-2031297210080910753376724-jpg-1000x1000.jpg", 4.7, 72, 1, "approved", "Ujjain, MP", provider_id),
+#                 (4, "Fieldking Heavy Rotavator", "machinery", 500.0, "per acre", "Heavy-duty 7-feet rotavator for complete soil preparation and fine seedbed.", "https://www.fieldking.com/blogs/wp-content/uploads/2024/09/Ploughing.jpg", 4.6, 64, 1, "approved", "Gwalior, MP", provider_id),
+#                 (5, "Automatic Drip Irrigation Kit", "irrigation", 3500.0, "per kit", "Complete drip system for 1 acre land. Saves up to 60% water and boosts yield.", "https://5.imimg.com/data5/SELLER/Default/2022/10/BC/MY/LI/21395960/drip-irrigation-system-1000x1000.jpg", 4.8, 89, 1, "approved", "Indore, MP", provider_id),
+#                 (6, "IFFCO DAP Fertilizer (50kg Bag)", "fertilizer", 1350.0, "per bag", "Original certified DAP fertilizer for strong root growth and early crop establishment.", "https://5.imimg.com/data5/SELLER/Default/2022/5/NJ/VT/MB/26553143/dap-fertilizer-500x500.jpg", 4.7, 201, 1, "approved", "Bhopal, MP", provider_id),
+#                 (7, "HYV Premium Wheat Seeds (GW-322)", "seeds", 450.0, "per kg", "Certified disease-resistant high yield wheat seeds with high germination rate.", "https://5.imimg.com/data5/SELLER/Default/2021/9/ZG/OS/PB/3131427/wheat-seeds-500x500.jpg", 4.9, 156, 1, "approved", "Sehore, MP", provider_id),
+#                 (8, "5-Ton Crop Transport Mini Truck", "transport", 2500.0, "per trip", "Reliable door-to-mandi farm transport service with GPS tracking available 24/7.", "https://5.imimg.com/data5/SELLER/Default/2022/3/QF/XN/XJ/149399990/mini-truck-500x500.jpg", 4.5, 43, 1, "approved", "Indore, MP", provider_id)
+#             ]
+#             for s in default_services:
+#                 cur.execute("""
+#                     INSERT INTO services (id, name, category, price, unit, description, image, rating, reviews, available, status, location, posted_by)
+#                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+#                 """, s)
+#             print(f"[AgroTech] Seeded {len(default_services)} initial services.")
 
-        # 5. Seed sample Service Requests
-        cur.execute("SELECT COUNT(*) FROM service_requests")
-        if cur.fetchone()[0] == 0:
-            sample_reqs = [
-                ('REQ-1001', farmer_id, 'Madhur Pratap Singh', '8127059423', provider_id, 1, 'Mahindra 575 DI Tractor Rental', 2, 1600.0, 'cod', 'pending', 'accepted', 'Indore Farm Sector 4', 'Need for ploughing 2 acres land.', 'Tomorrow 8:00 AM'),
-                ('REQ-1002', farmer_id, 'Madhur Pratap Singh', '8127059423', provider_id, 5, 'Automatic Drip Irrigation Kit', 1, 3500.0, 'upi', 'paid', 'pending', 'Indore Farm Sector 4', 'Installation assistance required.', 'This weekend')
-            ]
-            for r in sample_reqs:
-                cur.execute("""
-                    INSERT INTO service_requests (request_id, farmer_id, farmer_name, farmer_phone, provider_id, service_id, service_name, quantity, price, payment_method, payment_status, status, address, notes, preferred_date)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, r)
+#         # 5. Seed sample Service Requests
+#         cur.execute("SELECT COUNT(*) FROM service_requests")
+#         if cur.fetchone()[0] == 0:
+#             sample_reqs = [
+#                 ('REQ-1001', farmer_id, 'Madhur Pratap Singh', '8127059423', provider_id, 1, 'Mahindra 575 DI Tractor Rental', 2, 1600.0, 'cod', 'pending', 'accepted', 'Indore Farm Sector 4', 'Need for ploughing 2 acres land.', 'Tomorrow 8:00 AM'),
+#                 ('REQ-1002', farmer_id, 'Madhur Pratap Singh', '8127059423', provider_id, 5, 'Automatic Drip Irrigation Kit', 1, 3500.0, 'upi', 'paid', 'pending', 'Indore Farm Sector 4', 'Installation assistance required.', 'This weekend')
+#             ]
+#             for r in sample_reqs:
+#                 cur.execute("""
+#                     INSERT INTO service_requests (request_id, farmer_id, farmer_name, farmer_phone, provider_id, service_id, service_name, quantity, price, payment_method, payment_status, status, address, notes, preferred_date)
+#                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+#                 """, r)
 
-        # 6. Seed sample Alerts
-        cur.execute("SELECT COUNT(*) FROM alerts")
-        if cur.fetchone()[0] == 0:
-            sample_alerts = [
-                (farmer_id, 'farmer', 'request', 'Service Request Accepted ✅', 'Your booking for Mahindra 575 DI Tractor has been accepted by the provider.', 0),
-                (farmer_id, 'farmer', 'system', '🌾 Welcome to AgroTech!', 'Explore available farm machinery, rental equipment and farm supplies in your region.', 0),
-                (provider_id, 'provider', 'request', 'New Booking Received 🚜', 'Farmer Madhur Pratap Singh requested Mahindra 575 DI Tractor Rental.', 0),
-                (None, 'all', 'promo', '🎉 Seasonal Harvesting Discounts', 'Special 15% discount on combine harvesters and transport services this season.', 0)
-            ]
-            for a in sample_alerts:
-                cur.execute("""
-                    INSERT INTO alerts (user_id, audience, type, title, message, is_read)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, a)
+#         # 6. Seed sample Alerts
+#         cur.execute("SELECT COUNT(*) FROM alerts")
+#         if cur.fetchone()[0] == 0:
+#             sample_alerts = [
+#                 (farmer_id, 'farmer', 'request', 'Service Request Accepted ✅', 'Your booking for Mahindra 575 DI Tractor has been accepted by the provider.', 0),
+#                 (farmer_id, 'farmer', 'system', '🌾 Welcome to AgroTech!', 'Explore available farm machinery, rental equipment and farm supplies in your region.', 0),
+#                 (provider_id, 'provider', 'request', 'New Booking Received 🚜', 'Farmer Madhur Pratap Singh requested Mahindra 575 DI Tractor Rental.', 0),
+#                 (None, 'all', 'promo', '🎉 Seasonal Harvesting Discounts', 'Special 15% discount on combine harvesters and transport services this season.', 0)
+#             ]
+#             for a in sample_alerts:
+#                 cur.execute("""
+#                     INSERT INTO alerts (user_id, audience, type, title, message, is_read)
+#                     VALUES (?, ?, ?, ?, ?, ?)
+#                 """, a)
 
-        conn.commit()
-
+#         conn.commit()
+# """
 # Initialize DB instance
-local_db = SQLiteDB(SQLITE_DB_PATH)
+#local_db = SQLiteDB(SQLITE_DB_PATH)
 
 # FastAPI Application
 app = FastAPI()
@@ -433,6 +442,19 @@ def make_token(user: dict) -> str:
     }
     return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
 
+def user_to_dict(user: User) -> dict:
+    return {
+        'id': str(user.id),
+        'name': user.name,
+        'email': user.email,
+        'phone': user.phone,
+        'password_hash': user.password_hash,
+        'location': user.location or '',
+        'role': user.role,
+        'status': user.status,
+        'created_at': user.created_at,
+    }
+
 def user_public_fields(user: dict) -> dict:
     return {
         'id': user['id'],
@@ -483,29 +505,56 @@ def send_registration_otp_email(email: str, name: str, otp: str) -> bool:
         return False
 
 # Security & Role Dependencies
-def current_user(authorization: Optional[str] = Header(None)) -> dict:
+def current_user(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+) -> dict:
     from jose import jwt, JWTError
+
     if not authorization or not authorization.lower().startswith('bearer '):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, 'Missing Authorization Bearer token')
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            'Missing Authorization Bearer token'
+        )
+
     token = authorization.split(' ', 1)[1].strip()
+
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+        payload = jwt.decode(
+            token,
+            JWT_SECRET,
+            algorithms=['HS256']
+        )
+
         uid = payload.get('sub')
-    except JWTError:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, 'Invalid or expired token')
 
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM users WHERE id = ?", (uid,))
-    row = cur.fetchone()
-    conn.close()
+        if not uid:
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED,
+                'Invalid token'
+            )
 
-    if not row:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, 'User not found')
-    user = dict(row)
-    if user.get('status') == 'blocked':
-        raise HTTPException(status.HTTP_403_FORBIDDEN, 'Account is blocked. Contact administrator.')
-    return user
+        user = db.get(User, uuid.UUID(uid))
+
+    except (JWTError, ValueError):
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            'Invalid or expired token'
+        )
+
+    if not user:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            'User not found'
+        )
+
+    if user.status == 'blocked':
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            'Account is blocked. Contact administrator.'
+        )
+
+    return user_to_dict(user)
 
 def farmer_user(user=Depends(current_user)) -> dict:
     role = user.get('role', '').lower()
@@ -536,19 +585,14 @@ def root():
     }
 
 @app.get('/api/health')
-def health():
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM users")
-    u_cnt = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM services")
-    s_cnt = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM service_requests")
-    r_cnt = cur.fetchone()[0]
-    conn.close()
+def health(db: Session = Depends(get_db)):
+    u_cnt = db.query(User).count()
+    s_cnt = db.query(Service).count()
+    r_cnt = db.query(ServiceRequest).count()
+
     return {
         'status': 'ok',
-        'database': 'sqlite' if supabase_client is None else 'supabase',
+        'database': 'supabase',
         'users_count': u_cnt,
         'services_count': s_cnt,
         'requests_count': r_cnt,
@@ -558,143 +602,266 @@ def health():
 # ==================== Authentication Endpoints ====================
 
 @app.post('/api/auth/register')
-def register(payload: RegisterIn):
+def register(
+    payload: RegisterIn,
+    db: Session = Depends(get_db),
+):
     role_norm = payload.role.strip().lower()
+
     if role_norm == 'seller':
         role_norm = 'provider'
+
     if role_norm not in {'farmer', 'provider'}:
-        raise HTTPException(400, 'Registration role must be farmer or provider')
+        raise HTTPException(
+            400,
+            'Registration role must be farmer or provider'
+        )
 
-    conn = local_db.get_connection()
-    cur = conn.cursor()
+    email = payload.email.strip().lower()
 
-    cur.execute("SELECT id FROM users WHERE LOWER(email) = LOWER(?)", (payload.email.strip(),))
-    if cur.fetchone():
-        conn.close()
-        raise HTTPException(409, 'This email address is already registered. Please log in.')
+    # Check if user already exists
+    existing_user = (
+        db.query(User)
+        .filter(func.lower(User.email) == email)
+        .first()
+    )
 
-    otp = ''.join(secrets.choice('0123456789') for _ in range(max(4, OTP_LENGTH)))
-    expires_at = (datetime.now(timezone.utc) + timedelta(minutes=OTP_EXPIRE_MINUTES)).isoformat()
+    if existing_user:
+        raise HTTPException(
+            409,
+            'This email address is already registered. Please log in.'
+        )
+
+    # Generate OTP
+    otp = ''.join(
+        secrets.choice('0123456789')
+        for _ in range(max(4, OTP_LENGTH))
+    )
+
+    expires_at = (
+        datetime.now(timezone.utc)
+        + timedelta(minutes=OTP_EXPIRE_MINUTES)
+    )
+
     pw_hash = hash_password(payload.password)
-    otp_h = hash_otp(payload.email, otp)
+    otp_h = hash_otp(email, otp)
 
-    cur.execute("""
-        INSERT INTO registration_otps (email, name, phone, password_hash, location, role, otp_code, otp_hash, expires_at, attempts)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-        ON CONFLICT(email) DO UPDATE SET
-            name = excluded.name,
-            phone = excluded.phone,
-            password_hash = excluded.password_hash,
-            location = excluded.location,
-            role = excluded.role,
-            otp_code = excluded.otp_code,
-            otp_hash = excluded.otp_hash,
-            expires_at = excluded.expires_at,
-            attempts = 0
-    """, (payload.email.lower().strip(), payload.name.strip(), payload.phone.strip(), pw_hash, payload.location.strip(), role_norm, otp, otp_h, expires_at))
-    conn.commit()
-    conn.close()
+    # Check for existing pending registration
+    pending = db.get(RegistrationOTP, email)
 
-    sent = send_registration_otp_email(payload.email, payload.name, otp)
-    print(f"\n=======================================================\n[AgroTech AUTH] OTP for {payload.email} is: {otp}\n=======================================================\n")
+    if pending:
+        pending.name = payload.name.strip()
+        pending.phone = payload.phone.strip() or None
+        pending.password_hash = pw_hash
+        pending.location = payload.location.strip() or None
+        pending.role = role_norm
+        pending.otp_code = otp
+        pending.otp_hash = otp_h
+        pending.expires_at = expires_at
+        pending.attempts = 0
+    else:
+        pending = RegistrationOTP(
+            email=email,
+            name=payload.name.strip(),
+            phone=payload.phone.strip() or None,
+            password_hash=pw_hash,
+            location=payload.location.strip() or None,
+            role=role_norm,
+            otp_code=otp,
+            otp_hash=otp_h,
+            expires_at=expires_at,
+            attempts=0,
+        )
+
+        db.add(pending)
+
+    db.commit()
+
+    sent = send_registration_otp_email(
+        email,
+        payload.name,
+        otp
+    )
+
+    print(
+        f"\n=======================================================\n"
+        f"[AgroTech AUTH] OTP for {email} is: {otp}\n"
+        f"=======================================================\n"
+    )
 
     return {
-        'message': f'OTP sent successfully! (Dev Code: {otp})' if not sent else f'OTP sent to {payload.email}.',
+        'message': (
+            f'OTP sent successfully! (Dev Code: {otp})'
+            if not sent
+            else f'OTP sent to {email}.'
+        ),
         'debug_otp': otp,
-        'email': payload.email
+        'email': email
     }
 
+
 @app.post('/api/auth/register/verify-otp')
-def verify_registration_otp(payload: RegisterOtpVerifyIn):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
+def verify_registration_otp(
+    payload: RegisterOtpVerifyIn,
+    db: Session = Depends(get_db),
+):
+    email = payload.email.strip().lower()
 
-    cur.execute("SELECT * FROM registration_otps WHERE LOWER(email) = LOWER(?)", (payload.email.strip(),))
-    row = cur.fetchone()
-    if not row:
-        conn.close()
-        raise HTTPException(404, 'No pending registration found for this email. Please request OTP again.')
+    pending = db.get(
+        RegistrationOTP,
+        email
+    )
 
-    pending = dict(row)
-    attempts = int(pending.get('attempts', 0))
+    if not pending:
+        raise HTTPException(
+            404,
+            'No pending registration found for this email. Please request OTP again.'
+        )
 
-    if attempts >= OTP_MAX_ATTEMPTS:
-        cur.execute("DELETE FROM registration_otps WHERE LOWER(email) = LOWER(?)", (payload.email.strip(),))
-        conn.commit()
-        conn.close()
-        raise HTTPException(429, 'Too many invalid attempts. Please request a new OTP.')
+    if pending.attempts >= OTP_MAX_ATTEMPTS:
+        db.delete(pending)
+        db.commit()
+
+        raise HTTPException(
+            429,
+            'Too many invalid attempts. Please request a new OTP.'
+        )
+
+    # Check expiration
+    if pending.expires_at < datetime.now(timezone.utc):
+        db.delete(pending)
+        db.commit()
+
+        raise HTTPException(
+            400,
+            'OTP has expired. Please request a new OTP.'
+        )
 
     valid = (
-        payload.otp.strip() == pending.get('otp_code') or
-        pending.get('otp_hash') == hash_otp(payload.email, payload.otp) or
-        payload.otp.strip() == '123456'
+        payload.otp.strip() == pending.otp_code
+        or pending.otp_hash == hash_otp(
+            email,
+            payload.otp
+        )
+        or payload.otp.strip() == '123456'
     )
 
     if not valid:
-        cur.execute("UPDATE registration_otps SET attempts = attempts + 1 WHERE LOWER(email) = LOWER(?)", (payload.email.strip(),))
-        conn.commit()
-        conn.close()
-        raise HTTPException(400, 'Invalid OTP. Please check the code and try again.')
+        pending.attempts += 1
+        db.commit()
 
-    user_id = str(uuid.uuid4())
+        raise HTTPException(
+            400,
+            'Invalid OTP. Please check the code and try again.'
+        )
+
+    # Create new user
+    user = User(
+        id=uuid.uuid4(),
+        name=pending.name,
+        email=pending.email,
+        phone=pending.phone,
+        password_hash=pending.password_hash,
+        location=pending.location,
+        role=pending.role,
+        status='active',
+    )
+
+
     try:
-        cur.execute("""
-            INSERT INTO users (id, name, email, phone, password_hash, location, role, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
-        """, (user_id, pending['name'], pending['email'], pending['phone'], pending['password_hash'], pending.get('location', ''), pending.get('role', 'farmer')))
-        cur.execute("DELETE FROM registration_otps WHERE LOWER(email) = LOWER(?)", (payload.email.strip(),))
-        
-        # Insert welcome alert
-        cur.execute("""
-            INSERT INTO alerts (user_id, audience, type, title, message)
-            VALUES (?, ?, 'system', '🌾 Welcome to AgroTech!', 'Your account is active. Explore our services and tools.')
-        """, (user_id, pending.get('role', 'farmer')))
+        # Add the new user
+        db.add(user)
 
-        conn.commit()
-    except sqlite3.IntegrityError:
-        conn.close()
-        raise HTTPException(409, 'User with this email already exists.')
+        # IMPORTANT:
+        # Force SQLAlchemy to INSERT the user into PostgreSQL
+        # before inserting the alert that references users.id.
+        db.flush()
 
-    cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-    user = dict(cur.fetchone())
-    conn.close()
+        # Welcome alert
+        welcome_alert = Alert(
+            user_id=user.id,
+            audience=pending.role,
+            type='system',
+            title='🌾 Welcome to AgroTech!',
+            message='Your account is active. Explore our services and tools.',
+        )
 
-    token = make_token(user)
+        db.add(welcome_alert)
+
+        # Delete used OTP
+        db.delete(pending)
+
+        # Commit everything together
+        db.commit()
+
+        # Refresh user from PostgreSQL
+        db.refresh(user)
+    except Exception as exc:
+        db.rollback()
+
+        print(f"[AgroTech AUTH] OTP verification database error: {exc}")
+
+        raise HTTPException(
+            500,
+            f'OTP verification failed: {exc}'
+        )
+
+    user_dict = user_to_dict(user)
+
+    token = make_token(user_dict)
+
     return {
         'message': 'Account created successfully! Welcome to AgroTech 🌱',
-        'user': user_public_fields(user),
+        'user': user_public_fields(user_dict),
         'token': token
     }
 
 @app.post('/api/auth/login')
-def login(payload: LoginIn):
+def login(
+    payload: LoginIn,
+    db: Session = Depends(get_db),
+):
     username = payload.username.strip()
-    conn = local_db.get_connection()
-    cur = conn.cursor()
 
-    cur.execute("""
-        SELECT * FROM users 
-        WHERE LOWER(email) = LOWER(?) OR LOWER(name) = LOWER(?) OR phone = ?
-        LIMIT 1
-    """, (username, username, username))
-    row = cur.fetchone()
-    conn.close()
+    user = (
+        db.query(User)
+        .filter(
+            (func.lower(User.email) == username.lower())
+            | (func.lower(User.name) == username.lower())
+            | (User.phone == username)
+        )
+        .first()
+    )
 
-    if not row:
-        raise HTTPException(401, 'Invalid username/email or password.')
+    if not user:
+        raise HTTPException(
+            401,
+            'Invalid username/email or password.'
+        )
 
-    user = dict(row)
-    if not verify_password(payload.password, user['password_hash']):
-        raise HTTPException(401, 'Invalid username/email or password.')
+    if not verify_password(
+        payload.password,
+        user.password_hash
+    ):
+        raise HTTPException(
+            401,
+            'Invalid username/email or password.'
+        )
 
-    if user.get('status') == 'blocked':
-        raise HTTPException(403, 'Your account has been suspended. Please contact support.')
+    if user.status == 'blocked':
+        raise HTTPException(
+            403,
+            'Your account has been suspended. Please contact support.'
+        )
 
-    token = make_token(user)
+    user_dict = user_to_dict(user)
+
+    token = make_token(user_dict)
+
     return {
         'message': 'Login successful',
         'token': token,
-        'user': user_public_fields(user)
+        'user': user_public_fields(user_dict)
     }
 
 @app.get('/api/auth/me')
@@ -702,401 +869,955 @@ def get_me(user=Depends(current_user)):
     return {'user': user_public_fields(user)}
 
 @app.post('/api/admin/login')
-def admin_login(payload: LoginIn):
-    res = login(payload)
+def admin_login(
+    payload: LoginIn,
+    db: Session = Depends(get_db),
+):
+    res = login(payload, db)
+
     if res['user']['role'] != 'admin':
         raise HTTPException(403, 'Administrator access required.')
+
     return res
 
 @app.post('/api/admin/register')
-def admin_register(payload: RegisterIn):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id FROM users WHERE LOWER(email) = LOWER(?)", (payload.email.strip(),))
-    if cur.fetchone():
-        conn.close()
-        raise HTTPException(409, 'Admin user with this email already exists.')
+def admin_register(
+    payload: RegisterIn,
+    db: Session = Depends(get_db),
+):
+    email = payload.email.strip().lower()
 
-    admin_id = str(uuid.uuid4())
-    pw_h = hash_password(payload.password)
-    cur.execute("""
-        INSERT INTO users (id, name, email, phone, password_hash, location, role, status)
-        VALUES (?, ?, ?, ?, ?, ?, 'admin', 'active')
-    """, (admin_id, payload.name.strip(), payload.email.strip(), payload.phone.strip() or '0000000000', pw_h, payload.location.strip() or 'Headquarters'))
-    conn.commit()
+    existing_user = (
+        db.query(User)
+        .filter(func.lower(User.email) == email)
+        .first()
+    )
 
-    cur.execute("SELECT * FROM users WHERE id = ?", (admin_id,))
-    user = dict(cur.fetchone())
-    conn.close()
+    if existing_user:
+        raise HTTPException(
+            409,
+            'Admin user with this email already exists.'
+        )
 
-    return {'message': 'Admin account created successfully', 'user': user_public_fields(user)}
+    admin_id = uuid.uuid4()
+
+    user = User(
+        id=admin_id,
+        name=payload.name.strip(),
+        email=email,
+        phone=payload.phone.strip() or None,
+        password_hash=hash_password(payload.password),
+        location=payload.location.strip() or 'Headquarters',
+        role='admin',
+        status='active',
+    )
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return {
+        'message': 'Admin account created successfully',
+        'user': user_public_fields(
+            user_to_dict(user)
+        )
+    }
+
 
 # ==================== Services Endpoints ====================
 
 @app.get('/api/services')
-def get_services(category: Optional[str] = None, q: Optional[str] = None):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    query = """
-        SELECT s.*, u.name as provider_name, u.phone as provider_phone, u.location as provider_location
-        FROM services s
-        LEFT JOIN users u ON s.posted_by = u.id
-        WHERE s.status = 'approved' OR s.status = 'active'
-    """
-    params = []
+def get_services(
+    category: Optional[str] = None,
+    q: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    query = (
+        db.query(Service, User)
+        .outerjoin(User, Service.posted_by == User.id)
+        .filter(
+            (Service.status == 'approved') |
+            (Service.status == 'active')
+        )
+    )
+
     if category and category.lower() != 'all':
-        query += " AND LOWER(s.category) = LOWER(?)"
-        params.append(category.strip())
+        query = query.filter(
+            func.lower(Service.category) == category.strip().lower()
+        )
+
     if q and q.strip():
-        query += " AND (LOWER(s.name) LIKE ? OR LOWER(s.description) LIKE ? OR LOWER(s.location) LIKE ?)"
         pattern = f"%{q.strip().lower()}%"
-        params.extend([pattern, pattern, pattern])
-    
-    query += " ORDER BY s.available DESC, s.id DESC"
-    cur.execute(query, tuple(params))
+
+        query = query.filter(
+            (func.lower(Service.name).like(pattern)) |
+            (func.lower(Service.description).like(pattern)) |
+            (func.lower(Service.location).like(pattern))
+        )
+
+    query = query.order_by(
+        Service.available.desc(),
+        Service.id.desc()
+    )
+
     rows = []
-    for r in cur.fetchall():
-        d = dict(r)
-        d['available'] = bool(d.get('available', 1))
-        d['provider'] = {
-            'id': d.get('posted_by'),
-            'name': d.pop('provider_name', None) or 'Verified Provider',
-            'phone': d.pop('provider_phone', None) or '—',
-            'location': d.pop('provider_location', None) or d.get('location', '')
+
+    for service, provider in query.all():
+
+        data = {
+            'id': service.id,
+            'name': service.name,
+            'category': service.category,
+            'price': float(service.price),
+            'unit': service.unit,
+            'description': service.description or '',
+            'location': service.location or '',
+            'image': service.image or '',
+            'rating': float(service.rating) if service.rating is not None else 4.5,
+            'reviews': service.reviews or 0,
+            'available': bool(service.available),
+            'status': service.status,
+            'posted_by': str(service.posted_by) if service.posted_by else None,
+            'created_at': service.created_at,
+
+            'provider': {
+                'id': str(provider.id) if provider else None,
+                'name': provider.name if provider else 'Verified Provider',
+                'phone': provider.phone if provider and provider.phone else '—',
+                'location': (
+                    provider.location
+                    if provider and provider.location
+                    else service.location or ''
+                )
+            }
         }
-        rows.append(d)
-    conn.close()
+
+        rows.append(data)
+
     return {'services': rows}
+
 
 @app.get('/api/services/my')
-def get_my_services(user=Depends(provider_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM services WHERE posted_by = ? ORDER BY id DESC", (user['id'],))
+def get_my_services(
+    user=Depends(provider_user),
+    db: Session = Depends(get_db),
+):
+    services = (
+        db.query(Service)
+        .filter(Service.posted_by == uuid.UUID(user['id']))
+        .order_by(Service.id.desc())
+        .all()
+    )
+
     rows = []
-    for r in cur.fetchall():
-        d = dict(r)
-        d['available'] = bool(d.get('available', 1))
-        rows.append(d)
-    conn.close()
+
+    for service in services:
+        rows.append({
+            'id': service.id,
+            'name': service.name,
+            'category': service.category,
+            'price': float(service.price),
+            'unit': service.unit,
+            'description': service.description or '',
+            'location': service.location or '',
+            'image': service.image or '',
+            'rating': float(service.rating) if service.rating is not None else 4.5,
+            'reviews': service.reviews or 0,
+            'available': bool(service.available),
+            'status': service.status,
+            'posted_by': str(service.posted_by) if service.posted_by else None,
+            'created_at': service.created_at,
+        })
+
     return {'services': rows}
 
+
 @app.get('/api/services/{service_id}')
-def get_service_by_id(service_id: int):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        SELECT s.*, u.name as provider_name, u.phone as provider_phone, u.location as provider_location
-        FROM services s
-        LEFT JOIN users u ON s.posted_by = u.id
-        WHERE s.id = ?
-    """, (service_id,))
-    row = cur.fetchone()
-    conn.close()
-    if not row:
+def get_service_by_id(
+    service_id: int,
+    db: Session = Depends(get_db),
+):
+    result = (
+        db.query(Service, User)
+        .outerjoin(User, Service.posted_by == User.id)
+        .filter(Service.id == service_id)
+        .first()
+    )
+
+    if not result:
         raise HTTPException(404, 'Service not found')
-    d = dict(row)
-    d['available'] = bool(d.get('available', 1))
-    d['provider'] = {
-        'id': d.get('posted_by'),
-        'name': d.pop('provider_name', None) or 'Verified Provider',
-        'phone': d.pop('provider_phone', None) or '—',
-        'location': d.pop('provider_location', None) or d.get('location', '')
+
+    service, provider = result
+
+    return {
+        'id': service.id,
+        'name': service.name,
+        'category': service.category,
+        'price': float(service.price),
+        'unit': service.unit,
+        'description': service.description or '',
+        'location': service.location or '',
+        'image': service.image or '',
+        'rating': float(service.rating) if service.rating is not None else 4.5,
+        'reviews': service.reviews or 0,
+        'available': bool(service.available),
+        'status': service.status,
+        'posted_by': str(service.posted_by) if service.posted_by else None,
+        'created_at': service.created_at,
+
+        'provider': {
+            'id': str(provider.id) if provider else None,
+            'name': provider.name if provider else 'Verified Provider',
+            'phone': provider.phone if provider and provider.phone else '—',
+            'location': (
+                provider.location
+                if provider and provider.location
+                else service.location or ''
+            )
+        }
     }
-    return d
+
 
 @app.post('/api/services')
-def create_service(payload: ServiceIn, user=Depends(provider_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO services (name, category, price, unit, description, location, image, available, status, posted_by)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?)
-    """, (
-        payload.name.strip(), payload.category.strip(), payload.price, payload.unit.strip(),
-        payload.description.strip(), payload.location.strip(), payload.image,
-        1 if payload.available else 0, user['id']
-    ))
-    new_id = cur.lastrowid
-    conn.commit()
-    cur.execute("SELECT * FROM services WHERE id = ?", (new_id,))
-    row = dict(cur.fetchone())
-    conn.close()
-    row['available'] = bool(row['available'])
-    return row
+def create_service(
+    payload: ServiceIn,
+    user=Depends(provider_user),
+    db: Session = Depends(get_db),
+):
+    service = Service(
+        name=payload.name.strip(),
+        category=payload.category.strip(),
+        price=payload.price,
+        unit=payload.unit.strip(),
+        description=payload.description.strip(),
+        location=payload.location.strip(),
+        image=payload.image,
+        available=payload.available,
+        status='approved',
+        posted_by=uuid.UUID(user['id']),
+    )
+
+    try:
+        db.add(service)
+        db.commit()
+        db.refresh(service)
+
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            500,
+            'Failed to create service.'
+        )
+
+    return {
+        'id': service.id,
+        'name': service.name,
+        'category': service.category,
+        'price': float(service.price),
+        'unit': service.unit,
+        'description': service.description or '',
+        'location': service.location or '',
+        'image': service.image or '',
+        'rating': float(service.rating) if service.rating is not None else 4.5,
+        'reviews': service.reviews or 0,
+        'available': bool(service.available),
+        'status': service.status,
+        'posted_by': str(service.posted_by) if service.posted_by else None,
+        'created_at': service.created_at,
+    }
+
 
 @app.put('/api/services/{service_id}')
-def update_service(service_id: int, payload: ServiceIn, user=Depends(provider_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM services WHERE id = ?", (service_id,))
-    existing = cur.fetchone()
-    if not existing:
-        conn.close()
-        raise HTTPException(404, 'Service not found')
-    
-    svc = dict(existing)
-    if svc.get('posted_by') != user['id'] and user.get('role') != 'admin':
-        conn.close()
-        raise HTTPException(403, 'You do not have permission to edit this service.')
+def update_service(
+    service_id: int,
+    payload: ServiceIn,
+    user=Depends(provider_user),
+    db: Session = Depends(get_db),
+):
+    service = db.get(Service, service_id)
 
-    cur.execute("""
-        UPDATE services SET
-            name = ?, category = ?, price = ?, unit = ?, description = ?,
-            location = ?, image = ?, available = ?
-        WHERE id = ?
-    """, (
-        payload.name.strip(), payload.category.strip(), payload.price, payload.unit.strip(),
-        payload.description.strip(), payload.location.strip(), payload.image,
-        1 if payload.available else 0, service_id
-    ))
-    conn.commit()
-    cur.execute("SELECT * FROM services WHERE id = ?", (service_id,))
-    row = dict(cur.fetchone())
-    conn.close()
-    row['available'] = bool(row['available'])
-    return row
+    if not service:
+        raise HTTPException(404, 'Service not found')
+
+    if (
+        str(service.posted_by) != str(user['id'])
+        and user.get('role') != 'admin'
+    ):
+        raise HTTPException(
+            403,
+            'You do not have permission to edit this service.'
+        )
+
+    service.name = payload.name.strip()
+    service.category = payload.category.strip()
+    service.price = payload.price
+    service.unit = payload.unit.strip()
+    service.description = payload.description.strip()
+    service.location = payload.location.strip()
+    service.image = payload.image
+    service.available = payload.available
+
+    try:
+        db.commit()
+        db.refresh(service)
+
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            500,
+            'Failed to update service.'
+        )
+
+    return {
+        'id': service.id,
+        'name': service.name,
+        'category': service.category,
+        'price': float(service.price),
+        'unit': service.unit,
+        'description': service.description or '',
+        'location': service.location or '',
+        'image': service.image or '',
+        'rating': float(service.rating) if service.rating is not None else 4.5,
+        'reviews': service.reviews or 0,
+        'available': bool(service.available),
+        'status': service.status,
+        'posted_by': str(service.posted_by) if service.posted_by else None,
+        'created_at': service.created_at,
+    }
+
 
 @app.put('/api/services/{service_id}/status')
-def toggle_service_status(service_id: int, payload: StatusIn, user=Depends(provider_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM services WHERE id = ?", (service_id,))
-    existing = cur.fetchone()
-    if not existing:
-        conn.close()
-        raise HTTPException(404, 'Service not found')
-    
-    svc = dict(existing)
-    if svc.get('posted_by') != user['id'] and user.get('role') != 'admin':
-        conn.close()
-        raise HTTPException(403, 'Permission denied.')
+def toggle_service_status(
+    service_id: int,
+    payload: StatusIn,
+    user=Depends(provider_user),
+    db: Session = Depends(get_db),
+):
+    service = db.get(Service, service_id)
 
-    avail = 1 if payload.status.lower() in {'active', 'true', '1', 'available'} else 0
-    cur.execute("UPDATE services SET available = ? WHERE id = ?", (avail, service_id))
-    conn.commit()
-    cur.execute("SELECT * FROM services WHERE id = ?", (service_id,))
-    row = dict(cur.fetchone())
-    conn.close()
-    row['available'] = bool(row['available'])
-    return row
+    if not service:
+        raise HTTPException(404, 'Service not found')
+
+    if (
+        str(service.posted_by) != str(user['id'])
+        and user.get('role') != 'admin'
+    ):
+        raise HTTPException(
+            403,
+            'Permission denied.'
+        )
+
+    service.available = (
+        payload.status.lower()
+        in {'active', 'true', '1', 'available'}
+    )
+
+    try:
+        db.commit()
+        db.refresh(service)
+
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            500,
+            'Failed to update service status.'
+        )
+
+    return {
+        'id': service.id,
+        'name': service.name,
+        'category': service.category,
+        'price': float(service.price),
+        'unit': service.unit,
+        'description': service.description or '',
+        'location': service.location or '',
+        'image': service.image or '',
+        'rating': float(service.rating) if service.rating is not None else 4.5,
+        'reviews': service.reviews or 0,
+        'available': bool(service.available),
+        'status': service.status,
+        'posted_by': str(service.posted_by) if service.posted_by else None,
+        'created_at': service.created_at,
+    }
+
 
 @app.delete('/api/services/{service_id}')
-def delete_service(service_id: int, user=Depends(provider_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM services WHERE id = ?", (service_id,))
-    existing = cur.fetchone()
-    if not existing:
-        conn.close()
+def delete_service(
+    service_id: int,
+    user=Depends(provider_user),
+    db: Session = Depends(get_db),
+):
+    service = db.get(Service, service_id)
+
+    if not service:
         raise HTTPException(404, 'Service not found')
-    
-    svc = dict(existing)
-    if svc.get('posted_by') != user['id'] and user.get('role') != 'admin':
-        conn.close()
-        raise HTTPException(403, 'Permission denied.')
 
-    cur.execute("DELETE FROM services WHERE id = ?", (service_id,))
-    conn.commit()
-    conn.close()
-    return {'message': 'Service deleted successfully'}
+    if (
+        str(service.posted_by) != str(user['id'])
+        and user.get('role') != 'admin'
+    ):
+        raise HTTPException(
+            403,
+            'Permission denied.'
+        )
 
+    try:
+        db.delete(service)
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            500,
+            'Failed to delete service.'
+        )
+
+    return {
+        'message': 'Service deleted successfully'
+    }
 # ==================== Service Requests / Bookings ====================
 
+def service_request_to_dict(request: ServiceRequest) -> dict:
+    return {
+        'id': request.id,
+        'request_id': request.request_id,
+        'farmer_id': str(request.farmer_id) if request.farmer_id else None,
+        'farmer_name': request.farmer_name or '',
+        'farmer_phone': request.farmer_phone or '',
+        'provider_id': str(request.provider_id) if request.provider_id else None,
+        'service_id': request.service_id,
+        'service_name': request.service_name or '',
+        'quantity': request.quantity,
+        'price': float(request.price) if request.price is not None else 0.0,
+        'payment_method': request.payment_method,
+        'payment_status': request.payment_status,
+        'status': request.status,
+        'address': request.address or '',
+        'notes': request.notes or '',
+        'preferred_date': request.preferred_date or '',
+        'created_at': request.created_at,
+    }
+
+
 @app.post('/api/requests')
-def create_service_request(payload: ServiceRequestIn, user=Depends(farmer_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    
-    cur.execute("SELECT name, price, posted_by FROM services WHERE id = ?", (payload.service_id,))
-    svc_row = cur.fetchone()
-    
-    service_name = payload.service_name or (svc_row['name'] if svc_row else 'Agricultural Service')
-    unit_price = float(svc_row['price']) if svc_row else 0.0
-    total_price = payload.price if payload.price is not None else (unit_price * payload.quantity)
-    provider_id = payload.provider_id or (svc_row['posted_by'] if svc_row else None)
+def create_service_request(
+    payload: ServiceRequestIn,
+    user=Depends(farmer_user),
+    db: Session = Depends(get_db),
+):
+    # 1. Find the requested service in PostgreSQL
+    service = db.get(Service, payload.service_id)
 
-    req_id = 'REQ-' + str(int(datetime.now().timestamp() * 1000))[-7:]
-    cur.execute("""
-        INSERT INTO service_requests (
-            request_id, farmer_id, farmer_name, farmer_phone, provider_id,
-            service_id, service_name, quantity, price, payment_method,
-            payment_status, status, address, notes, preferred_date
+    if not service:
+        raise HTTPException(
+            status_code=404,
+            detail='Service not found'
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', ?, ?, ?)
-    """, (
-        req_id, user['id'], user['name'], user['phone'], provider_id,
-        payload.service_id, service_name, payload.quantity, total_price,
-        payload.payment_method, payload.address, payload.notes, payload.preferred_date
-    ))
-    new_id = cur.lastrowid
 
-    # Create alert for Provider
+    # 2. Determine provider
+    provider_id = None
+
+    if payload.provider_id:
+        try:
+            provider_id = uuid.UUID(payload.provider_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail='Invalid provider_id'
+            )
+    else:
+        provider_id = service.posted_by
+
+    # 3. If provider was specified, make sure they exist
     if provider_id:
-        cur.execute("""
-            INSERT INTO alerts (user_id, audience, type, title, message)
-            VALUES (?, 'provider', 'request', 'New Service Request 🚜', ?)
-        """, (provider_id, f"Farmer {user['name']} requested '{payload.service_name}'. Review in your Requests tab."))
+        provider = db.get(User, provider_id)
 
-    conn.commit()
-    cur.execute("SELECT * FROM service_requests WHERE id = ?", (new_id,))
-    row = dict(cur.fetchone())
-    conn.close()
-    return row
+        if not provider:
+            raise HTTPException(
+                status_code=404,
+                detail='Service provider not found'
+            )
+
+    # 4. Calculate service price
+    unit_price = float(service.price)
+
+    total_price = (
+        payload.price
+        if payload.price is not None
+        else unit_price * payload.quantity
+    )
+
+    # 5. Generate request ID
+    req_id = 'REQ-' + str(int(datetime.now().timestamp() * 1000))[-7:]
+
+    # 6. Create PostgreSQL service request
+    new_request = ServiceRequest(
+        request_id=req_id,
+
+        farmer_id=uuid.UUID(user['id']),
+        farmer_name=user['name'],
+        farmer_phone=user.get('phone') or '',
+
+        provider_id=provider_id,
+
+        service_id=service.id,
+        service_name=payload.service_name or service.name,
+
+        quantity=payload.quantity,
+        price=total_price,
+
+        payment_method=payload.payment_method,
+        payment_status='pending',
+        status='pending',
+
+        address=payload.address,
+        notes=payload.notes,
+        preferred_date=payload.preferred_date,
+    )
+
+    try:
+        db.add(new_request)
+
+        # Make sure the request exists before creating the alert
+        db.flush()
+
+        # 7. Create provider alert in PostgreSQL
+        if provider_id:
+            provider_alert = Alert(
+                user_id=provider_id,
+                audience='provider',
+                type='request',
+                title='New Service Request 🚜',
+                message=(
+                    f"Farmer {user['name']} requested "
+                    f"'{new_request.service_name}'. "
+                    f"Review in your Requests tab."
+                ),
+            )
+
+            db.add(provider_alert)
+
+        db.commit()
+        db.refresh(new_request)
+
+    except Exception as exc:
+        db.rollback()
+
+        print(
+            f"[AgroTech REQUEST] Database error while creating request: {exc}"
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail=f'Failed to create service request: {exc}'
+        )
+
+    return service_request_to_dict(new_request)
+
 
 @app.get('/api/requests/my')
-def get_my_requests(user=Depends(farmer_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        SELECT r.*, u.name as provider_name, u.phone as provider_phone, u.location as provider_location
-        FROM service_requests r
-        LEFT JOIN users u ON r.provider_id = u.id
-        WHERE r.farmer_id = ?
-        ORDER BY r.id DESC
-    """, (user['id'],))
+def get_my_requests(
+    user=Depends(farmer_user),
+    db: Session = Depends(get_db),
+):
+    farmer_id = uuid.UUID(user['id'])
+
+    requests = (
+        db.query(ServiceRequest, User)
+        .outerjoin(
+            User,
+            ServiceRequest.provider_id == User.id
+        )
+        .filter(
+            ServiceRequest.farmer_id == farmer_id
+        )
+        .order_by(
+            ServiceRequest.id.desc()
+        )
+        .all()
+    )
+
     rows = []
-    for r in cur.fetchall():
-        d = dict(r)
-        d['provider'] = {
-            'name': d.pop('provider_name', None) or 'Service Provider',
-            'phone': d.pop('provider_phone', None) or '—',
-            'location': d.pop('provider_location', None) or '—'
+
+    for request, provider in requests:
+
+        data = service_request_to_dict(request)
+
+        data['provider'] = {
+            'name': provider.name if provider else 'Service Provider',
+            'phone': provider.phone if provider and provider.phone else '—',
+            'location': (
+                provider.location
+                if provider and provider.location
+                else '—'
+            ),
         }
-        rows.append(d)
-    conn.close()
-    return {'requests': rows}
+
+        rows.append(data)
+
+    return {
+        'requests': rows
+    }
+
 
 @app.get('/api/provider/requests')
-def get_provider_requests(user=Depends(provider_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        SELECT r.*, u.name as f_name, u.email as f_email, u.phone as f_phone, u.location as f_location
-        FROM service_requests r
-        LEFT JOIN users u ON r.farmer_id = u.id
-        WHERE r.provider_id = ? OR r.provider_id IS NULL
-        ORDER BY r.id DESC
-    """, (user['id'],))
+def get_provider_requests(
+    user=Depends(provider_user),
+    db: Session = Depends(get_db),
+):
+    provider_id = uuid.UUID(user['id'])
+
+    requests = (
+        db.query(ServiceRequest, User)
+        .outerjoin(
+            User,
+            ServiceRequest.farmer_id == User.id
+        )
+        .filter(
+            (ServiceRequest.provider_id == provider_id)
+            |
+            (ServiceRequest.provider_id.is_(None))
+        )
+        .order_by(
+            ServiceRequest.id.desc()
+        )
+        .all()
+    )
+
     rows = []
-    for r in cur.fetchall():
-        d = dict(r)
-        d['farmer'] = {
-            'name': d.pop('f_name', None) or d.get('farmer_name') or 'Farmer',
-            'email': d.pop('f_email', None) or '',
-            'phone': d.pop('f_phone', None) or d.get('farmer_phone') or '—',
-            'location': d.pop('f_location', None) or d.get('address') or '—'
+
+    for request, farmer in requests:
+
+        data = service_request_to_dict(request)
+
+        data['farmer'] = {
+            'name': (
+                farmer.name
+                if farmer
+                else request.farmer_name or 'Farmer'
+            ),
+            'email': farmer.email if farmer else '',
+            'phone': (
+                farmer.phone
+                if farmer and farmer.phone
+                else request.farmer_phone or '—'
+            ),
+            'location': (
+                farmer.location
+                if farmer and farmer.location
+                else request.address or '—'
+            ),
         }
-        rows.append(d)
-    conn.close()
-    return {'requests': rows}
+
+        rows.append(data)
+
+    return {
+        'requests': rows
+    }
+
 
 @app.put('/api/requests/{request_id}/status')
-def update_request_status(request_id: str, payload: RequestStatusUpdateIn, user=Depends(current_user)):
-    valid_statuses = {'pending', 'accepted', 'rejected', 'completed', 'cancelled'}
+def update_request_status(
+    request_id: str,
+    payload: RequestStatusUpdateIn,
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    valid_statuses = {
+        'pending',
+        'accepted',
+        'rejected',
+        'completed',
+        'cancelled'
+    }
+
     new_status = payload.status.lower().strip()
+
     if new_status not in valid_statuses:
-        raise HTTPException(400, f"Invalid status. Must be one of: {', '.join(valid_statuses)}")
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                'Invalid status. Must be one of: '
+                + ', '.join(valid_statuses)
+            )
+        )
 
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM service_requests WHERE request_id = ? OR id = ?", (request_id, request_id))
-    row = cur.fetchone()
-    if not row:
-        conn.close()
-        raise HTTPException(404, 'Service request not found.')
-    
-    req = dict(row)
-    cur.execute("UPDATE service_requests SET status = ? WHERE id = ?", (new_status, req['id']))
+    # Find by request_id first
+    request = (
+        db.query(ServiceRequest)
+        .filter(
+            ServiceRequest.request_id == request_id
+        )
+        .first()
+    )
 
-    # Create alert for the farmer
-    if req.get('farmer_id'):
+    # Also allow numeric database ID
+    if not request and request_id.isdigit():
+        request = db.get(
+            ServiceRequest,
+            int(request_id)
+        )
+
+    if not request:
+        raise HTTPException(
+            status_code=404,
+            detail='Service request not found.'
+        )
+
+    # Permission check
+    user_id = uuid.UUID(user['id'])
+    user_role = user.get('role', '').lower()
+
+    if user_role in {'provider', 'seller'}:
+
+        if request.provider_id != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail='Permission denied.'
+            )
+
+    elif user_role == 'farmer':
+
+        if request.farmer_id != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail='Permission denied.'
+            )
+
+        # Farmers should only be able to cancel their request
+        if new_status != 'cancelled':
+            raise HTTPException(
+                status_code=403,
+                detail='Farmers can only cancel their requests.'
+            )
+
+    elif user_role != 'admin':
+
+        raise HTTPException(
+            status_code=403,
+            detail='Permission denied.'
+        )
+
+    # Update request status
+    request.status = new_status
+
+    # Create alert for farmer
+    if request.farmer_id:
+
         status_titles = {
             'accepted': 'Request Accepted! ✅',
             'rejected': 'Request Update ❌',
             'completed': 'Service Completed! 🏁',
-            'cancelled': 'Request Cancelled 🚫'
+            'cancelled': 'Request Cancelled 🚫',
+            'pending': 'Request Status Update',
         }
-        cur.execute("""
-            INSERT INTO alerts (user_id, audience, type, title, message)
-            VALUES (?, 'farmer', 'status', ?, ?)
-        """, (
-            req['farmer_id'],
-            status_titles.get(new_status, 'Request Status Update'),
-            f"Your request for '{req['service_name']}' is now {new_status.upper()}."
-        ))
 
-    conn.commit()
-    cur.execute("SELECT * FROM service_requests WHERE id = ?", (req['id'],))
-    updated = dict(cur.fetchone())
-    conn.close()
-    return updated
+        farmer_alert = Alert(
+            user_id=request.farmer_id,
+            audience='farmer',
+            type='status',
+            title=status_titles.get(
+                new_status,
+                'Request Status Update'
+            ),
+            message=(
+                f"Your request for "
+                f"'{request.service_name}' "
+                f"is now {new_status.upper()}."
+            ),
+        )
+
+        try:
+            db.add(farmer_alert)
+
+            db.commit()
+            db.refresh(request)
+
+        except Exception as exc:
+            db.rollback()
+
+            print(
+                f"[AgroTech REQUEST] Status update error: {exc}"
+            )
+
+            raise HTTPException(
+                status_code=500,
+                detail=f'Failed to update request status: {exc}'
+            )
+
+    else:
+        try:
+            db.commit()
+            db.refresh(request)
+
+        except Exception as exc:
+            db.rollback()
+
+            raise HTTPException(
+                status_code=500,
+                detail=f'Failed to update request status: {exc}'
+            )
+
+    return service_request_to_dict(request)
+
+@app.put('/api/admin/requests/{request_id}/status')
+def admin_update_request_status_legacy(
+    request_id: str,
+    payload: RequestStatusUpdateIn,
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    return update_request_status(
+        request_id=request_id,
+        payload=payload,
+        user=user,
+        db=db,
+    )
 
 # ==================== Alerts & Notifications ====================
 
 @app.get('/api/alerts')
-def get_alerts(user=Depends(current_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
+def get_alerts(
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
     role = user.get('role', 'farmer')
-    cur.execute("""
-        SELECT * FROM alerts 
-        WHERE user_id = ? OR audience = 'all' OR audience = ?
-        ORDER BY id DESC
-        LIMIT 50
-    """, (user['id'], role))
-    rows = [dict(r) for r in cur.fetchall()]
-    conn.close()
-    for r in rows:
-        r['is_read'] = bool(r.get('is_read', 0))
-    return {'alerts': rows}
+    user_id = uuid.UUID(user['id'])
+
+    alerts = (
+        db.query(Alert)
+        .filter(
+            (Alert.user_id == user_id)
+            | (Alert.audience == 'all')
+            | (Alert.audience == role)
+        )
+        .order_by(Alert.id.desc())
+        .limit(50)
+        .all()
+    )
+
+    rows = []
+
+    for alert in alerts:
+        rows.append({
+            'id': alert.id,
+            'user_id': str(alert.user_id) if alert.user_id else None,
+            'audience': alert.audience,
+            'type': alert.type,
+            'title': alert.title,
+            'message': alert.message,
+            'is_read': bool(alert.is_read),
+            'created_by': str(alert.created_by) if alert.created_by else None,
+            'created_at': alert.created_at,
+        })
+
+    return rows
 
 @app.put('/api/alerts/{alert_id}/read')
-def mark_alert_read(alert_id: int, user=Depends(current_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("UPDATE alerts SET is_read = 1 WHERE id = ?", (alert_id,))
-    conn.commit()
-    conn.close()
+def mark_alert_read(
+    alert_id: int,
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    alert = db.get(Alert, alert_id)
+
+    if not alert:
+        raise HTTPException(404, 'Alert not found.')
+
+    alert.is_read = True
+
+    db.commit()
+
     return {'message': 'Alert marked as read'}
 
 @app.post('/api/alerts/mark-all-read')
-def mark_all_alerts_read(user=Depends(current_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("UPDATE alerts SET is_read = 1 WHERE user_id = ? OR audience = 'all' OR audience = ?", (user['id'], user.get('role', 'farmer')))
-    conn.commit()
-    conn.close()
+def mark_all_alerts_read(
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    user_id = uuid.UUID(user['id'])
+    role = user.get('role', 'farmer')
+
+    alerts = (
+        db.query(Alert)
+        .filter(
+            (Alert.user_id == user_id)
+            | (Alert.audience == 'all')
+            | (Alert.audience == role)
+        )
+        .all()
+    )
+
+    for alert in alerts:
+        alert.is_read = True
+
+    db.commit()
+
     return {'message': 'All alerts marked as read'}
 
 # ==================== Admin Management Endpoints ====================
 
 @app.get('/api/admin/dashboard')
-def admin_dashboard(user=Depends(admin_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    
-    cur.execute("SELECT COUNT(*) FROM users WHERE role = 'farmer'")
-    farmers_cnt = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM users WHERE role IN ('provider','seller')")
-    providers_cnt = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM users WHERE role = 'farmer' AND status = 'active'")
-    active_farmers = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM users WHERE role IN ('provider','seller') AND status = 'active'")
-    active_providers = cur.fetchone()[0]
+def admin_dashboard(
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    farmers_cnt = (
+        db.query(User)
+        .filter(User.role == 'farmer')
+        .count()
+    )
 
-    cur.execute("SELECT COUNT(*) FROM services")
-    services_cnt = cur.fetchone()[0]
-    cur.execute("SELECT COUNT(*) FROM services WHERE available = 1")
-    active_services = cur.fetchone()[0]
+    providers_cnt = (
+        db.query(User)
+        .filter(User.role.in_(['provider', 'seller']))
+        .count()
+    )
 
-    cur.execute("SELECT price, status FROM service_requests")
-    reqs = [dict(r) for r in cur.fetchall()]
-    conn.close()
+    active_farmers = (
+        db.query(User)
+        .filter(
+            User.role == 'farmer',
+            User.status == 'active'
+        )
+        .count()
+    )
 
-    pending_reqs = sum(1 for r in reqs if r.get('status') == 'pending')
-    completed_reqs = sum(1 for r in reqs if r.get('status') == 'completed')
-    total_volume = sum(float(r.get('price', 0)) for r in reqs)
+    active_providers = (
+        db.query(User)
+        .filter(
+            User.role.in_(['provider', 'seller']),
+            User.status == 'active'
+        )
+        .count()
+    )
+
+    services_cnt = db.query(Service).count()
+
+    active_services = (
+        db.query(Service)
+        .filter(Service.available.is_(True))
+        .count()
+    )
+
+    requests = db.query(ServiceRequest).all()
+
+    pending_reqs = sum(
+        1 for r in requests
+        if r.status == 'pending'
+    )
+
+    completed_reqs = sum(
+        1 for r in requests
+        if r.status == 'completed'
+    )
+
+    total_volume = sum(
+        float(r.price or 0)
+        for r in requests
+    )
+
+    total_requests = len(requests)
 
     return {
         'total_farmers': farmers_cnt,
@@ -1105,291 +1826,599 @@ def admin_dashboard(user=Depends(admin_user)):
         'active_providers': active_providers,
         'total_services': services_cnt,
         'active_services': active_services,
-        'total_requests': len(reqs),
+        'total_requests': total_requests,
         'pending_requests': pending_reqs,
         'completed_requests': completed_reqs,
         'total_volume': total_volume,
+
         # Legacy fields for backward compatibility
         'users': farmers_cnt + providers_cnt + 1,
         'products': services_cnt,
         'services': services_cnt,
-        'orders': len(reqs),
+        'orders': total_requests,
         'revenue': total_volume,
         'pending_orders': pending_reqs
     }
 
 @app.get('/api/admin/farmers')
-def admin_get_farmers(status: Optional[str] = None, q: Optional[str] = None, user=Depends(admin_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    query = """
-        SELECT u.id, u.name, u.email, u.phone, u.location, u.role, u.status, u.created_at,
-               (SELECT COUNT(*) FROM service_requests WHERE farmer_id = u.id) as requests_count
-        FROM users u
-        WHERE u.role = 'farmer'
-    """
-    params = []
+def admin_get_farmers(
+    status: Optional[str] = None,
+    q: Optional[str] = None,
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    query = (
+        db.query(
+            User,
+            func.count(ServiceRequest.id).label('requests_count')
+        )
+        .outerjoin(
+            ServiceRequest,
+            ServiceRequest.farmer_id == User.id
+        )
+        .filter(User.role == 'farmer')
+    )
+
     if status and status.lower() != 'all':
-        query += " AND u.status = ?"
-        params.append(status.strip().lower())
+        query = query.filter(
+            User.status == status.strip().lower()
+        )
+
     if q and q.strip():
-        query += " AND (LOWER(u.name) LIKE ? OR LOWER(u.email) LIKE ? OR u.phone LIKE ? OR LOWER(u.location) LIKE ?)"
         pat = f"%{q.strip().lower()}%"
-        params.extend([pat, pat, pat, pat])
-    
-    query += " ORDER BY u.created_at DESC"
-    cur.execute(query, tuple(params))
-    rows = [dict(r) for r in cur.fetchall()]
-    conn.close()
+        query = query.filter(
+            (func.lower(User.name).like(pat))
+            | (func.lower(User.email).like(pat))
+            | (User.phone.like(pat))
+            | (func.lower(User.location).like(pat))
+        )
+
+    results = (
+        query
+        .group_by(User.id)
+        .order_by(User.created_at.desc())
+        .all()
+    )
+
+    rows = []
+
+    for farmer, requests_count in results:
+        rows.append({
+            'id': str(farmer.id),
+            'name': farmer.name,
+            'email': farmer.email,
+            'phone': farmer.phone,
+            'location': farmer.location,
+            'role': farmer.role,
+            'status': farmer.status,
+            'created_at': farmer.created_at,
+            'requests_count': requests_count,
+        })
+
     return {'farmers': rows}
 
 @app.get('/api/admin/providers')
-def admin_get_providers(status: Optional[str] = None, q: Optional[str] = None, user=Depends(admin_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    query = """
-        SELECT u.id, u.name, u.email, u.phone, u.location, u.role, u.status, u.created_at,
-               (SELECT COUNT(*) FROM services WHERE posted_by = u.id) as services_count,
-               (SELECT COUNT(*) FROM service_requests WHERE provider_id = u.id) as requests_count
-        FROM users u
-        WHERE u.role IN ('provider', 'seller')
-    """
-    params = []
+def admin_get_providers(
+    status: Optional[str] = None,
+    q: Optional[str] = None,
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    query = (
+        db.query(
+            User,
+            func.count(Service.id).label('services_count'),
+            func.count(ServiceRequest.id).label('requests_count'),
+        )
+        .outerjoin(
+            Service,
+            Service.posted_by == User.id
+        )
+        .outerjoin(
+            ServiceRequest,
+            ServiceRequest.provider_id == User.id
+        )
+        .filter(User.role.in_(['provider', 'seller']))
+    )
+
     if status and status.lower() != 'all':
-        query += " AND u.status = ?"
-        params.append(status.strip().lower())
+        query = query.filter(
+            User.status == status.strip().lower()
+        )
+
     if q and q.strip():
-        query += " AND (LOWER(u.name) LIKE ? OR LOWER(u.email) LIKE ? OR u.phone LIKE ? OR LOWER(u.location) LIKE ?)"
         pat = f"%{q.strip().lower()}%"
-        params.extend([pat, pat, pat, pat])
-    
-    query += " ORDER BY u.created_at DESC"
-    cur.execute(query, tuple(params))
-    rows = [dict(r) for r in cur.fetchall()]
-    conn.close()
+        query = query.filter(
+            (func.lower(User.name).like(pat))
+            | (func.lower(User.email).like(pat))
+            | (User.phone.like(pat))
+            | (func.lower(User.location).like(pat))
+        )
+
+    results = (
+        query
+        .group_by(User.id)
+        .order_by(User.created_at.desc())
+        .all()
+    )
+
+    rows = []
+
+    for provider, services_count, requests_count in results:
+        rows.append({
+            'id': str(provider.id),
+            'name': provider.name,
+            'email': provider.email,
+            'phone': provider.phone,
+            'location': provider.location,
+            'role': provider.role,
+            'status': provider.status,
+            'created_at': provider.created_at,
+            'services_count': services_count,
+            'requests_count': requests_count,
+        })
+
     return {'providers': rows}
 
+
 @app.get('/api/admin/users')
-def admin_get_all_users(user=Depends(admin_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id, name, email, phone, location, role, status, created_at FROM users ORDER BY created_at DESC")
-    rows = [dict(r) for r in cur.fetchall()]
-    conn.close()
+def admin_get_all_users(
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    users = (
+        db.query(User)
+        .order_by(User.created_at.desc())
+        .all()
+    )
+
+    rows = []
+
+    for u in users:
+        rows.append({
+            'id': str(u.id),
+            'name': u.name,
+            'email': u.email,
+            'phone': u.phone,
+            'location': u.location,
+            'role': u.role,
+            'status': u.status,
+            'created_at': u.created_at,
+        })
+
     return {'users': rows}
 
 @app.put('/api/admin/users/{user_id}/status')
-def admin_update_user_status(user_id: str, payload: StatusIn, user=Depends(admin_user)):
+def admin_update_user_status(
+    user_id: str,
+    payload: StatusIn,
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
     if payload.status not in {'active', 'blocked', 'pending'}:
         raise HTTPException(400, 'Invalid user status.')
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("UPDATE users SET status = ? WHERE id = ?", (payload.status, user_id))
-    conn.commit()
-    cur.execute("SELECT id, name, email, phone, location, role, status, created_at FROM users WHERE id = ?", (user_id,))
-    row = cur.fetchone()
-    conn.close()
-    if not row:
+
+    try:
+        uid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(400, 'Invalid user ID.')
+
+    target_user = db.get(User, uid)
+
+    if not target_user:
         raise HTTPException(404, 'User not found.')
-    return dict(row)
+
+    target_user.status = payload.status
+
+    db.commit()
+    db.refresh(target_user)
+
+    return {
+        'id': str(target_user.id),
+        'name': target_user.name,
+        'email': target_user.email,
+        'phone': target_user.phone,
+        'location': target_user.location,
+        'role': target_user.role,
+        'status': target_user.status,
+        'created_at': target_user.created_at,
+    }
 
 @app.get('/api/admin/services')
-def admin_get_services(category: Optional[str] = None, q: Optional[str] = None, user=Depends(admin_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    query = """
-        SELECT s.*, u.name as provider_name, u.email as provider_email, u.phone as provider_phone
-        FROM services s
-        LEFT JOIN users u ON s.posted_by = u.id
-        WHERE 1=1
-    """
-    params = []
+def admin_get_services(
+    category: Optional[str] = None,
+    q: Optional[str] = None,
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    query = (
+        db.query(Service, User)
+        .outerjoin(User, Service.posted_by == User.id)
+    )
+
     if category and category.lower() != 'all':
-        query += " AND LOWER(s.category) = LOWER(?)"
-        params.append(category.strip())
+        query = query.filter(
+            func.lower(Service.category) == category.strip().lower()
+        )
+
     if q and q.strip():
-        query += " AND (LOWER(s.name) LIKE ? OR LOWER(s.location) LIKE ? OR LOWER(u.name) LIKE ?)"
         pat = f"%{q.strip().lower()}%"
-        params.extend([pat, pat, pat])
-    
-    query += " ORDER BY s.id DESC"
-    cur.execute(query, tuple(params))
+        query = query.filter(
+            (func.lower(Service.name).like(pat))
+            | (func.lower(Service.location).like(pat))
+            | (func.lower(User.name).like(pat))
+        )
+
+    results = query.order_by(Service.id.desc()).all()
+
     rows = []
-    for r in cur.fetchall():
-        d = dict(r)
-        d['available'] = bool(d.get('available', 1))
-        d['provider'] = {'name': d.pop('provider_name', None) or '—', 'email': d.pop('provider_email', None) or '', 'phone': d.pop('provider_phone', None) or ''}
-        rows.append(d)
-    conn.close()
-    return {'services': rows, 'listings': rows}
+
+    for service, provider in results:
+        rows.append({
+            'id': service.id,
+            'name': service.name,
+            'category': service.category,
+            'price': float(service.price) if service.price is not None else None,
+            'unit': service.unit,
+            'description': service.description,
+            'location': service.location,
+            'image': service.image,
+            'rating': float(service.rating) if service.rating is not None else 0,
+            'reviews': service.reviews,
+            'available': bool(service.available),
+            'status': service.status,
+            'posted_by': str(service.posted_by) if service.posted_by else None,
+            'created_at': service.created_at,
+            'provider': {
+                'name': provider.name if provider else '—',
+                'email': provider.email if provider else '',
+                'phone': provider.phone if provider else '',
+            },
+        })
+
+    return {
+        'services': rows,
+        'listings': rows,
+    }
 
 @app.put('/api/admin/services/{service_id}/status')
-def admin_update_service_status(service_id: int, payload: StatusIn, user=Depends(admin_user)):
-    avail = 1 if payload.status.lower() in {'approved', 'active', 'true', '1'} else 0
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("UPDATE services SET available = ? WHERE id = ?", (avail, service_id))
-    conn.commit()
-    cur.execute("SELECT * FROM services WHERE id = ?", (service_id,))
-    row = cur.fetchone()
-    conn.close()
-    if not row:
+def admin_update_service_status(
+    service_id: int,
+    payload: StatusIn,
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    service = db.get(Service, service_id)
+
+    if not service:
         raise HTTPException(404, 'Service not found.')
-    d = dict(row)
-    d['available'] = bool(d.get('available', 1))
-    return d
+
+    status = payload.status.strip().lower()
+
+    if status not in {'approved', 'active', 'inactive', 'rejected'}:
+        raise HTTPException(400, 'Invalid service status.')
+
+    service.status = status
+    service.available = status in {'approved', 'active'}
+
+    db.commit()
+    db.refresh(service)
+
+    return {
+        'id': service.id,
+        'name': service.name,
+        'category': service.category,
+        'price': float(service.price) if service.price is not None else None,
+        'unit': service.unit,
+        'description': service.description,
+        'location': service.location,
+        'image': service.image,
+        'rating': float(service.rating) if service.rating is not None else 0,
+        'reviews': service.reviews,
+        'available': bool(service.available),
+        'status': service.status,
+        'posted_by': str(service.posted_by) if service.posted_by else None,
+        'created_at': service.created_at,
+    }
 
 @app.delete('/api/admin/services/{service_id}')
-def admin_delete_service(service_id: int, user=Depends(admin_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM services WHERE id = ?", (service_id,))
-    conn.commit()
-    conn.close()
+def admin_delete_service(
+    service_id: int,
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    service = db.get(Service, service_id)
+
+    if not service:
+        raise HTTPException(404, 'Service not found.')
+
+    db.delete(service)
+    db.commit()
+
     return {'message': 'Service removed by admin'}
 
 @app.get('/api/admin/requests')
-def admin_get_requests(status: Optional[str] = None, user=Depends(admin_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    query = """
-        SELECT r.*,
-               f.name as farmer_name_db, f.email as farmer_email, f.phone as farmer_phone_db,
-               p.name as provider_name, p.email as provider_email, p.phone as provider_phone
-        FROM service_requests r
-        LEFT JOIN users f ON r.farmer_id = f.id
-        LEFT JOIN users p ON r.provider_id = p.id
-        WHERE 1=1
-    """
-    params = []
+def admin_get_requests(
+    status: Optional[str] = None,
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    query = (
+        db.query(ServiceRequest, User, User)
+        .outerjoin(
+            User,
+            ServiceRequest.farmer_id == User.id
+        )
+        .outerjoin(
+            User,
+            ServiceRequest.provider_id == User.id
+        )
+    )
+
     if status and status.lower() != 'all':
-        query += " AND r.status = ?"
-        params.append(status.strip().lower())
-    
-    query += " ORDER BY r.id DESC"
-    cur.execute(query, tuple(params))
+        query = query.filter(
+            ServiceRequest.status == status.strip().lower()
+        )
+
+    results = (
+        db.query(ServiceRequest)
+        .order_by(ServiceRequest.id.desc())
+        .all()
+    )
+
     rows = []
-    for r in cur.fetchall():
-        d = dict(r)
-        d['farmer'] = {
-            'name': d.pop('farmer_name_db', None) or d.get('farmer_name') or 'Farmer',
-            'email': d.pop('farmer_email', None) or '',
-            'phone': d.pop('farmer_phone_db', None) or d.get('farmer_phone') or ''
-        }
-        d['provider'] = {
-            'name': d.pop('provider_name', None) or 'Provider',
-            'email': d.pop('provider_email', None) or '',
-            'phone': d.pop('provider_phone', None) or ''
-        }
-        rows.append(d)
-    conn.close()
-    return {'requests': rows, 'orders': rows}
+
+    for request in results:
+        farmer = db.get(User, request.farmer_id) if request.farmer_id else None
+        provider = db.get(User, request.provider_id) if request.provider_id else None
+
+        rows.append({
+            'id': request.id,
+            'request_id': request.request_id,
+            'farmer_id': str(request.farmer_id) if request.farmer_id else None,
+            'farmer_name': request.farmer_name,
+            'farmer_phone': request.farmer_phone,
+            'provider_id': str(request.provider_id) if request.provider_id else None,
+            'service_id': request.service_id,
+            'service_name': request.service_name,
+            'quantity': request.quantity,
+            'price': float(request.price) if request.price is not None else None,
+            'payment_method': request.payment_method,
+            'payment_status': request.payment_status,
+            'status': request.status,
+            'address': request.address,
+            'notes': request.notes,
+            'preferred_date': request.preferred_date,
+            'created_at': request.created_at,
+            'farmer': {
+                'name': farmer.name if farmer else request.farmer_name or 'Farmer',
+                'email': farmer.email if farmer else '',
+                'phone': farmer.phone if farmer else request.farmer_phone or '',
+            },
+            'provider': {
+                'name': provider.name if provider else 'Provider',
+                'email': provider.email if provider else '',
+                'phone': provider.phone if provider else '',
+            },
+        })
+
+    return {
+        'requests': rows,
+        'orders': rows,
+    }
 
 @app.get('/api/admin/listings')
-def admin_get_listings_legacy(user=Depends(admin_user)):
-    return admin_get_services(user=user)
+def admin_get_listings_legacy(
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    return admin_get_services(user=user, db=db)
+
 
 @app.put('/api/admin/listings/{listing_id}/status')
-def admin_update_listing_status_legacy(listing_id: int, payload: StatusIn, user=Depends(admin_user)):
-    return admin_update_service_status(listing_id, payload, user)
+def admin_update_listing_status_legacy(
+    listing_id: int,
+    payload: StatusIn,
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    return admin_update_service_status(
+        listing_id=listing_id,
+        payload=payload,
+        user=user,
+        db=db,
+    )
+
 
 @app.get('/api/admin/orders')
-def admin_get_orders_legacy(user=Depends(admin_user)):
-    return admin_get_requests(user=user)
+def admin_get_orders_legacy(
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    return admin_get_requests(user=user, db=db)
 
 @app.get('/api/admin/payments')
-def admin_get_payments(user=Depends(admin_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT request_id as order_id, price, payment_method, payment_status, status, created_at FROM service_requests ORDER BY id DESC")
-    rows = [dict(r) for r in cur.fetchall()]
-    conn.close()
+def admin_get_payments(
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    requests = (
+        db.query(ServiceRequest)
+        .order_by(ServiceRequest.id.desc())
+        .all()
+    )
+
+    rows = []
+
+    for request in requests:
+        rows.append({
+            'order_id': request.request_id,
+            'price': float(request.price) if request.price is not None else None,
+            'payment_method': request.payment_method,
+            'payment_status': request.payment_status,
+            'status': request.status,
+            'created_at': request.created_at,
+        })
+
     return {'payments': rows}
 
 @app.get('/api/admin/complaints')
-def admin_get_complaints(user=Depends(admin_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        SELECT c.*, u.name as user_name, u.email as user_email
-        FROM complaints c
-        LEFT JOIN users u ON c.user_id = u.id
-        ORDER BY c.id DESC
-    """)
+def admin_get_complaints(
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    complaints = (
+        db.query(Complaint, User)
+        .outerjoin(User, Complaint.user_id == User.id)
+        .order_by(Complaint.id.desc())
+        .all()
+    )
+
     rows = []
-    for r in cur.fetchall():
-        d = dict(r)
-        d['users'] = {'name': d.pop('user_name', None) or '—', 'email': d.pop('user_email', None) or '—'}
-        rows.append(d)
-    conn.close()
+
+    for complaint, complaint_user in complaints:
+        rows.append({
+            'id': complaint.id,
+            'user_id': str(complaint.user_id) if complaint.user_id else None,
+            'subject': complaint.subject,
+            'description': complaint.description,
+            'priority': complaint.priority,
+            'status': complaint.status,
+            'created_at': complaint.created_at,
+            'users': {
+                'name': complaint_user.name if complaint_user else '—',
+                'email': complaint_user.email if complaint_user else '—',
+            },
+        })
+
     return {'complaints': rows}
 
 @app.put('/api/admin/complaints/{complaint_id}/status')
-def admin_update_complaint_status(complaint_id: int, payload: StatusIn, user=Depends(admin_user)):
+def admin_update_complaint_status(
+    complaint_id: int,
+    payload: StatusIn,
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
     if payload.status not in {'open', 'assigned', 'resolved', 'closed'}:
         raise HTTPException(400, 'Invalid complaint status.')
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("UPDATE complaints SET status = ? WHERE id = ?", (payload.status, complaint_id))
-    conn.commit()
-    cur.execute("SELECT * FROM complaints WHERE id = ?", (complaint_id,))
-    row = cur.fetchone()
-    conn.close()
-    if not row:
-        raise HTTPException(404, 'Complaint not found.')
-    return dict(row)
 
+    complaint = db.get(Complaint, complaint_id)
+
+    if not complaint:
+        raise HTTPException(404, 'Complaint not found.')
+
+    complaint.status = payload.status
+
+    db.commit()
+    db.refresh(complaint)
+
+    return {
+        'id': complaint.id,
+        'user_id': str(complaint.user_id) if complaint.user_id else None,
+        'subject': complaint.subject,
+        'description': complaint.description,
+        'priority': complaint.priority,
+        'status': complaint.status,
+        'created_at': complaint.created_at,
+    }
 @app.post('/api/admin/notifications')
-def admin_send_notification(payload: NotificationIn, user=Depends(admin_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO alerts (audience, type, title, message, created_by)
-        VALUES (?, 'system', ?, ?, ?)
-    """, (payload.audience, payload.title or 'System Announcement', payload.message, user['id']))
-    new_id = cur.lastrowid
-    conn.commit()
-    cur.execute("SELECT * FROM alerts WHERE id = ?", (new_id,))
-    alert = dict(cur.fetchone())
-    conn.close()
-    return alert
+def admin_send_notification(
+    payload: NotificationIn,
+    user=Depends(admin_user),
+    db: Session = Depends(get_db),
+):
+    alert = Alert(
+        audience=payload.audience,
+        type='system',
+        title=payload.title or 'System Announcement',
+        message=payload.message,
+        created_by=uuid.UUID(user['id']),
+    )
+
+    db.add(alert)
+    db.commit()
+    db.refresh(alert)
+
+    return {
+        'id': alert.id,
+        'audience': alert.audience,
+        'type': alert.type,
+        'title': alert.title,
+        'message': alert.message,
+        'is_read': bool(alert.is_read),
+        'created_by': str(alert.created_by) if alert.created_by else None,
+        'created_at': alert.created_at,
+    }
 
 # ==================== Legacy Products & Complaints Endpoints ====================
 
 @app.get('/api/products')
-def get_products(category: Optional[str] = None):
-    # Delegate to services for unified experience
-    res = get_services(category=category)
+def get_products(
+    category: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    res = get_services(category=category, db=db)
     return {'products': res['services']}
 
+
 @app.post('/api/orders')
-def legacy_create_order(payload: ServiceRequestIn, user=Depends(current_user)):
-    return create_service_request(payload, user)
+def legacy_create_order(
+    payload: ServiceRequestIn,
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    return create_service_request(
+        payload=payload,
+        user=user,
+        db=db,
+    )
 
 @app.get('/api/orders')
-def legacy_get_orders(user=Depends(current_user)):
+def legacy_get_orders(
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
     if user.get('role') in {'provider', 'seller'}:
-        return get_provider_requests(user)
-    return get_my_requests(user)
+        return get_provider_requests(user=user, db=db)
+
+    return get_my_requests(user=user, db=db)
 
 @app.post('/api/complaints')
-def create_complaint(payload: ComplaintIn, user=Depends(current_user)):
-    conn = local_db.get_connection()
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO complaints (user_id, subject, description, priority, status)
-        VALUES (?, ?, ?, ?, 'open')
-    """, (user['id'], payload.subject, payload.description, payload.priority))
-    new_id = cur.lastrowid
-    conn.commit()
-    cur.execute("SELECT * FROM complaints WHERE id = ?", (new_id,))
-    comp = dict(cur.fetchone())
-    conn.close()
-    return comp
+def create_complaint(
+    payload: ComplaintIn,
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    complaint = Complaint(
+        user_id=uuid.UUID(user['id']),
+        subject=payload.subject,
+        description=payload.description,
+        priority=payload.priority,
+        status='open',
+    )
+
+    db.add(complaint)
+    db.commit()
+    db.refresh(complaint)
+
+    return {
+        'id': complaint.id,
+        'user_id': str(complaint.user_id) if complaint.user_id else None,
+        'subject': complaint.subject,
+        'description': complaint.description,
+        'priority': complaint.priority,
+        'status': complaint.status,
+        'created_at': complaint.created_at,
+    }
 
 @app.get('/api/notifications')
-def legacy_get_notifications(user=Depends(current_user)):
-    return get_alerts(user)
+def legacy_get_notifications(
+    user=Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    return get_alerts(user=user, db=db)
+
 
 @app.post("/api/chatbot")
 async def chatbot(request: ChatRequest):

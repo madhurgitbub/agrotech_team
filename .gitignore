@@ -8,3 +8,8 @@ venv/
 # Python cache
 __pycache__/
 *.pyc
+# Local SQLite database
+*.db
+
+# Alembic temporary/check output
+alembic_check.txt
