@@ -2,7 +2,7 @@ import os
 
 from pathlib import Path
 from dotenv import load_dotenv
-from mistralai.client import Mistral
+from google import genai
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -22,19 +22,11 @@ ROOT_DIR = BASE_DIR.parent
 # Load .env file
 load_dotenv(BASE_DIR / ".env")
 
-# Mistral API key
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
+#Gemini API Key
 
-if MISTRAL_API_KEY:
-    print("Mistral API Key loaded: True")
-else:
-    print("Mistral API Key loaded: False (AI features disabled)")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# Create Mistral client
-client = Mistral(
-    api_key=MISTRAL_API_KEY
-)
-
+gemini_client = genai.Client(api_key=GEMINI_API_KEY)
 
 # ADD THIS HERE
 class ChatRequest(BaseModel):
@@ -2454,27 +2446,16 @@ Important rules:
 User preferred language: {request.language}
 """
 
-        chat_response = client.chat.complete(
+        chat_response = gemini_client.models.generate_content(
+            model="gemini-3.5-flash",
+            contents=f"""
+{system_prompt}
 
-            model="mistral-small-latest",
-
-            messages=[
-
-                {
-                    "role": "system",
-                    "content": system_prompt
-                },
-
-                {
-                    "role": "user",
-                    "content": request.message
-                }
-
-            ]
-
+User: {request.message}
+"""
         )
 
-        reply = chat_response.choices[0].message.content
+        reply = chat_response.text
 
         return {
             "success": True,
@@ -2483,7 +2464,7 @@ User preferred language: {request.language}
 
     except Exception as e:
 
-        print("Mistral Chatbot Error:", e)
+        print("Gemini Chatbot Error:", e)
 
         return {
             "success": False,
